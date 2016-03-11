@@ -1,0 +1,37 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.springframework:spring-context:4.2.4.RELEASE'
+    }
+}
+
+repositories{
+	mavenCentral()
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+dependencies {
+    compile 'org.springframework:spring-context:4.2.4.RELEASE',
+    		'org.springframework:spring-webmvc:4.2.4.RELEASE',
+    		'org.springframework:spring-websocket:4.0.1.RELEASE',
+    		'org.springframework:spring-messaging:4.0.1.RELEASE'
+}
+
+apply plugin: 'war'
+
+war {
+	version =  '0.1.0'
+	baseName = 'clueless'
+	archiveName = 'clueless.war'
+}
+
+sourceCompatibility = '1.7'
+project.webAppDirName = 'WebContent'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.11'
+}
