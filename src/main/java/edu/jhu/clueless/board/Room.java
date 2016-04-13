@@ -1,5 +1,6 @@
-package edu.jhu.clueless;
+package edu.jhu.clueless.board;
 
+import edu.jhu.clueless.Constants;
 import edu.jhu.clueless.board.GameSquare;
 
 import java.awt.*;
