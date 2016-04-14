@@ -1,9 +1,9 @@
 package edu.jhu.clueless.board;
 
 import edu.jhu.clueless.Constants.Suspect;
-import edu.jhu.clueless.Point;
 import org.junit.Test;
 
+import java.awt.*;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;

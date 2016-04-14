@@ -2,8 +2,8 @@ package edu.jhu.clueless.board;
 
 import edu.jhu.clueless.Constants.Room;
 import edu.jhu.clueless.Constants.Suspect;
-import edu.jhu.clueless.Point;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,8 +74,8 @@ public class GameBoard {
 		Point start = suspectPawns.get(suspect);
 		GameSquare startSquare = gameSquares.get(start);
 		GameSquare destinationSquare = gameSquares.get(destination);
-		int diffX = Math.abs(start.getX() - destination.getX());
-		int diffY = Math.abs(start.getY() - destination.getY());
+		int diffX = Math.abs(start.x - destination.x);
+		int diffY = Math.abs(start.y - destination.y);
 
 		// Determine whether move request is valid
 		boolean valid = destinationSquare != null && // Destination is valid game square
