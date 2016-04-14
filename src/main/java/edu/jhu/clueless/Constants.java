@@ -23,12 +23,11 @@ public class Constants {
 	}
 
 	public enum Room implements Card {
-		HALL, LOUNGE, LIBRARY, BILLIARD_ROOM, DINING_ROOM, CONSERVATORY, BALLROOM, KITCHEN;
+		STUDY, HALL, LOUNGE, LIBRARY, BILLIARD_ROOM, DINING_ROOM, CONSERVATORY, BALLROOM, KITCHEN;
 
 		public EntityType getType() {
 			return EntityType.ROOM;
 		}
-
 	}
 
 }

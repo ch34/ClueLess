@@ -19,6 +19,7 @@ dependencies {
     		'org.springframework:spring-webmvc:4.2.4.RELEASE',
     		'org.springframework:spring-websocket:4.0.1.RELEASE',
     		'org.springframework:spring-messaging:4.0.1.RELEASE'
+    testCompile 'junit:junit:4.11'
 }
 
 apply plugin: 'war'
