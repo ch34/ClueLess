@@ -30,7 +30,9 @@ war {
 	archiveName = 'clueless.war'
 }
 
-sourceCompatibility = '1.7'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 project.webAppDirName = 'WebContent'
 
 task wrapper(type: Wrapper) {
