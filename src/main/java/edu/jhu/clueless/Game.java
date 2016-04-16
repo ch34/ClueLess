@@ -1,5 +1,6 @@
 package edu.jhu.clueless;
 
+import com.sun.istack.internal.Nullable;
 import edu.jhu.clueless.Constants.EntityType;
 import edu.jhu.clueless.Constants.Suspect;
 import edu.jhu.clueless.board.GameBoard;
@@ -19,10 +20,12 @@ public class Game {
 	private UUID id;
 	private String name;
 	private GameBoard board;
-	private Set<Card> caseFile;
+	private Map<EntityType, Card> caseFile;
 	private int indexPlayerTurn;
-	private AtomicBoolean isStarted;
-	private Set<Card> currentSuggestion;
+	private int indexPlayerResponding;
+	private AtomicBoolean started;
+	private Player winner;
+	private Map<EntityType, Card> currentSuggestion;
 	private ConcurrentMap<Suspect, Player> players;
 
 	public Game() {
@@ -33,11 +36,12 @@ public class Game {
 		id = UUID.randomUUID();
 		this.name = name;
 		board = new GameBoard();
-		caseFile = new HashSet<>();
+		caseFile = new HashMap<>();
 		players = new ConcurrentHashMap<>();
 		indexPlayerTurn = -1;
-		isStarted = new AtomicBoolean();
-		currentSuggestion = new HashSet<>();
+		started = new AtomicBoolean();
+		currentSuggestion = null;
+		winner = null;
 	}
 
 	/**
@@ -49,9 +53,9 @@ public class Game {
 			return false;
 		}
 		// Only initialize game if it was not already started
-		if (isStarted.compareAndSet(false, true)) {
+		if (started.compareAndSet(false, true)) {
 			distributeCards();
-			incrementPlayerTurn();
+			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
 		}
 		return true;
 	}
@@ -66,7 +70,7 @@ public class Game {
 			for (int i = 0; i < cards.size(); i++) {
 				Card card = cards.get(i);
 				if (card.getType() == type) {
-					caseFile.add(card);
+					caseFile.put(type, card);
 					cards.remove(i);
 					break;
 				}
@@ -74,16 +78,13 @@ public class Game {
 		}
 
 		// Distribute remaining cards to players
-		int indexPlayer = 0;
+		int indexPlayer = rotatePlayerIndex(-1, true);
 		for (Iterator<Card> iterator = cards.iterator(); iterator.hasNext();) {
 			Card card = iterator.next();
-			Player player;
-			while ((player = players.get(TURN_ORDER[indexPlayer])) == null) {
-				indexPlayer = incrementPlayerCounter(indexPlayer);
-			}
+			Player player = players.get(TURN_ORDER[indexPlayer]);
 			player.addCard(card);
 			iterator.remove();
-			indexPlayer = incrementPlayerCounter(indexPlayer);
+			indexPlayer = rotatePlayerIndex(indexPlayer, true);
 		}
 	}
 
@@ -103,12 +104,29 @@ public class Game {
 		return Collections.unmodifiableCollection(players.values());
 	}
 
-	public Set<Card> getCaseFile() {
-		return Collections.unmodifiableSet(caseFile);
+	public Map<EntityType, Card> getCaseFile() {
+		return Collections.unmodifiableMap(caseFile);
 	}
 
 	public boolean isStarted() {
-		return isStarted.get();
+		return started.get();
+	}
+
+	/**
+	 * @return Winner of game, or null if no winner yet
+	 */
+	public Player getWinner() {
+		return winner;
+	}
+
+	/**
+	 * @return Player whose turn it is, or null if game is not yet started or has already been won.
+	 */
+	public Player getPlayerTurn() {
+		if (!started.get()|| winner != null) {
+			return null;
+		}
+		return players.get(TURN_ORDER[indexPlayerTurn]);
 	}
 
 	/**
@@ -117,7 +135,7 @@ public class Game {
 	 * @return Id of the new player, or null if the player could not be added.
 	 */
 	public UUID addPlayer(Suspect suspect) {
-		if (isStarted.get()) {
+		if (started.get()) {
 			return null;
 		}
 		Player newPlayer = new Player(suspect);
@@ -125,7 +143,11 @@ public class Game {
 		return existingPlayer == null ? newPlayer.getID() : null;
 	}
 
-	private Player getPlayer(UUID id) {
+	/**
+	 * @param id Id of player to retrieve
+	 * @return The player associated with the given ID, or null if no player is associated with the given ID.
+	 */
+	public Player getPlayer(UUID id) {
 		for (Player player : players.values()) {
 			if (player.getID().equals(id)) {
 				return player;
@@ -135,43 +157,122 @@ public class Game {
 	}
 
 	private boolean isPlayerTurn(Player player) {
-		return player.getSuspect().equals(TURN_ORDER[indexPlayerTurn]);
+		return isStarted() &&
+			winner == null &&
+			player.getSuspect().equals(TURN_ORDER[indexPlayerTurn]);
 	}
 
-	private void incrementPlayerTurn() {
-		indexPlayerTurn = incrementPlayerCounter(indexPlayerTurn);
-		while (players.get(TURN_ORDER[indexPlayerTurn]) == null) {
-			indexPlayerTurn = incrementPlayerCounter(indexPlayerTurn);
+	private int rotatePlayerIndex(int currIndex, boolean mustBeActive) {
+		int newIndex = incrementCounterModPlayers(currIndex);
+		Player nextPlayer = players.get(TURN_ORDER[newIndex]);
+		while (nextPlayer == null || (mustBeActive && !nextPlayer.isActive())) {
+			newIndex = incrementCounterModPlayers(newIndex);
+			nextPlayer = players.get(TURN_ORDER[newIndex]);
 		}
+		return newIndex;
 	}
 
-	private int incrementPlayerCounter(int counter) {
+	private int incrementCounterModPlayers(int counter) {
 		return (counter + 1) % TURN_ORDER.length;
 	}
 
 	/**
 	 * Move player to given destination
-	 * @param playerId Id of player to move
+	 * @param player Player to move
 	 * @param point Destination to move player to
 	 * @return True if move request was valid and game state was updated as a result, false otherwise.
 	 */
-	public boolean move(UUID playerId, Point point) {
-		Player player = getPlayer(playerId);
-		return player != null &&
-				isPlayerTurn(player) &&
+	public boolean move(Player player, Point point) {
+		boolean valid = isPlayerTurn(player) &&
 				board.move(player.getSuspect(), point);
+
+		// If player moved into a hallway, their turn is over. If they moved into a room, they can make a suggestion.
+		if (valid && board.getRoom(point) == null) {
+			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+		}
+
+		return valid;
 	};
 
 	/**
-	 *
-	 * @param playerId Id of player making suggestion
+	 * @param player Player making suggestion
 	 * @param suggestion Player's suggestion
 	 * @return True if suggestion is valid and game state is updated as a result, false otherwise.
 	 */
-	public boolean suggest(UUID playerId, List<Card> suggestion) {
-		Player player = getPlayer(playerId);
-		// TODO: implement
-		return true;
+	public boolean suggest(Player player, Map<EntityType, Card> suggestion) {
+		Point playerLocation = board.getLocation(player.getSuspect());
+
+		boolean valid = isPlayerTurn(player) &&
+				suggestion.size() == 3 &&
+				board.getRoom(playerLocation) == suggestion.get(EntityType.ROOM);
+
+		if (valid) {
+			// Move suggestion's suspect to suggestion's room
+			board.move((Suspect) suggestion.get(EntityType.SUSPECT), playerLocation, true);
+
+			// Save this player's suggestion for comparison against responses
+			currentSuggestion = suggestion;
+
+			// Initialize rotation for players' responses
+			indexPlayerResponding = rotatePlayerIndex(indexPlayerTurn, false);
+		}
+
+		return valid;
+	}
+
+	/**
+	 * Check if this player's response to the current suggestion is valid.
+	 * @param player Player responding
+	 * @param response Player's response, or null if player cannot disprove suggestion.
+	 * @return True if this response is valid and game state is updated as a result, false otherwise.
+	 */
+	public boolean isResponseValid(Player player, @Nullable Card response) {
+		boolean valid;
+		if (currentSuggestion == null) {
+			valid = false;
+		} else if (!player.getSuspect().equals(TURN_ORDER[indexPlayerResponding])) {
+			valid = false;
+		} else if (response == null) {
+			valid = !player.hasAnyCard(currentSuggestion.values());
+		} else {
+			valid = currentSuggestion.containsValue(response) && player.hasCard(response);
+		}
+
+		if (valid) {
+			indexPlayerResponding = rotatePlayerIndex(indexPlayerResponding, false);
+
+			// If we've wrapped back around to the original suggester, the response cycle is over, and the main turn
+			// cycle continues
+			if (indexPlayerResponding == indexPlayerTurn) {
+				currentSuggestion = null;
+				indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+			}
+		}
+
+		return valid;
+	}
+
+	/**
+	 * @param player Player making accusation
+	 * @param accusation Player's accusation
+	 * @return True if accusation is valid (not necessarily correct) and game state is updated as a result, false
+	 * otherwise.
+	 */
+	public boolean accuse(Player player, Map<EntityType, Card> accusation) {
+		boolean valid = isPlayerTurn(player) &&
+				accusation.size() == 3;
+
+		if (valid) {
+			if (accusation.get(EntityType.SUSPECT) == caseFile.get(EntityType.SUSPECT) &&
+					accusation.get(EntityType.WEAPON) == caseFile.get(EntityType.WEAPON) &&
+					accusation.get(EntityType.ROOM) == caseFile.get(EntityType.ROOM)) {
+				winner = player;
+			} else {
+				player.setActive(false);
+			}
+		}
+
+		return valid;
 	}
 
 }

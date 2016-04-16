@@ -58,17 +58,6 @@ public class GameBoardTest {
 	}
 
 	@Test
-	public void testNoMoveRoom() {
-		GameBoard board = new GameBoard();
-		Point lounge = new Point(4, 4);
-
-		board.move(Suspect.COLONEL_MUSTARD, lounge);
-
-		assertTrue(board.move(Suspect.COLONEL_MUSTARD, lounge));
-		assertEquals(lounge, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
-	}
-
-	@Test
 	public void testMoveOccupiedHallway() {
 		GameBoard board = new GameBoard();
 		Point lounge = new Point(4, 4);
@@ -148,6 +137,28 @@ public class GameBoardTest {
 		Point kitchen = new Point(4, 0);
 
 		assertFalse(board.move(Suspect.COLONEL_MUSTARD, kitchen));
+		assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+		assertFalse(board.gameSquares.get(home).isAvailable());
+	}
+
+	@Test
+	public void testValidMoveTriggeredBySuggestion() {
+		GameBoard board = new GameBoard();
+		Point home = new Point(4, 3);
+		Point library = new Point(0, 2);
+
+		assertTrue(board.move(Suspect.COLONEL_MUSTARD, library, true));
+		assertEquals(library, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+		assertTrue(board.gameSquares.get(home).isAvailable());
+	}
+
+	@Test
+	public void testInvalidMoveTriggeredBySuggestion() {
+		GameBoard board = new GameBoard();
+		Point home = new Point(4, 3);
+		Point hallway = new Point(3, 2);
+
+		assertFalse(board.move(Suspect.COLONEL_MUSTARD, hallway, true));
 		assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
 		assertFalse(board.gameSquares.get(home).isAvailable());
 	}

@@ -19,6 +19,7 @@ public class PlayerTest {
 		assertNotNull(player.getCards());
 		assertEquals(0, player.getCards().size());
 		assertNotNull(player.getID());
+		assertTrue(player.isActive());
 	}
 
 	@Test

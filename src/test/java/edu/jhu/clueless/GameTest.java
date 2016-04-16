@@ -2,9 +2,11 @@ package edu.jhu.clueless;
 
 import org.junit.Test;
 
+import edu.jhu.clueless.Constants.EntityType;
 import edu.jhu.clueless.Constants.Suspect;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -53,7 +55,7 @@ public class GameTest {
 		assertTrue(game.start());
 
 		// Verify case file has 3 cards
-		Set<Card> caseFile = game.getCaseFile();
+		Map<EntityType, Card> caseFile = game.getCaseFile();
 		assertEquals(3, caseFile.size());
 
 		// Verify remaining 18 unique cards have been distributed to players
@@ -65,7 +67,7 @@ public class GameTest {
 
 		// Verify no overlap between players' cards and case file
 		Set<Card> merged = new HashSet<>();
-		merged.addAll(caseFile);
+		merged.addAll(caseFile.values());
 		merged.addAll(playerCards);
 		assertEquals(21, merged.size());
 

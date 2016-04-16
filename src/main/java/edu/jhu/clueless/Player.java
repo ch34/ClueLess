@@ -9,11 +9,13 @@ public class Player {
 	private UUID id;
 	private Suspect suspect;
 	private Set<Card> cards;
+	private boolean active;
 
 	public Player(Suspect suspect) {
 		this.id = UUID.randomUUID();
 		this.suspect = suspect;
 		this.cards = new HashSet<>();
+		active = true;
 	}
 
 	public void addCard(Card card) {
@@ -48,6 +50,14 @@ public class Player {
 
 	public UUID getID() {
 		return id;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
+	public boolean isActive() {
+		return active;
 	}
 
 }

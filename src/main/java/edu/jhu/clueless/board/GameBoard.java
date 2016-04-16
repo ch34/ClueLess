@@ -48,6 +48,22 @@ public class GameBoard {
 		}
 	}
 
+	/**
+	 * @param point Point being queried
+	 * @return Room located at given point, or null if not a room.
+	 */
+	public Room getRoom(Point point) {
+		return gameSquares.get(point).getRoomName();
+	}
+
+	/**
+	 * @param suspect Suspect being queried
+	 * @return Point location of given suspect
+	 */
+	public Point getLocation(Suspect suspect) {
+		return suspectPawns.get(suspect);
+	}
+
 	public void initializeSuspectPawns() {
 		for (Suspect suspect : Suspect.values()) {
 			Point home = null;
@@ -71,6 +87,17 @@ public class GameBoard {
 	 * @return Will return true if move request was valid and game state was updated, false otherwise.
 	 */
 	public boolean move(Suspect suspect, Point destination) {
+		return move(suspect, destination, false);
+	};
+
+	/**
+	 * Move given suspect pawn to given destination point, if allowed.
+	 * @param suspect Suspect to move
+	 * @param destination Desired destination
+	 * @param triggeredBySuggestion Whether this move was triggered by a suggestion
+	 * @return Will return true if move request was valid and game state was updated, false otherwise.
+	 */
+	public boolean move(Suspect suspect, Point destination, boolean triggeredBySuggestion) {
 		Point start = suspectPawns.get(suspect);
 		GameSquare startSquare = gameSquares.get(start);
 		GameSquare destinationSquare = gameSquares.get(destination);
@@ -78,10 +105,17 @@ public class GameBoard {
 		int diffY = Math.abs(start.y - destination.y);
 
 		// Determine whether move request is valid
-		boolean valid = destinationSquare != null && // Destination is valid game square
-				(diffX > 0 || diffY > 0 || startSquare.isRoom()) && // Actually moved if was in a hallway
-				destinationSquare.isAvailable() && // Destination is available
-				(diffX + diffY <= 1 || startSquare.connectedTo(destinationSquare)); // Move was to adjacent square, or through a secret passage
+		boolean valid;
+		if (triggeredBySuggestion) {
+			valid = destinationSquare != null && // Destination is valid game square
+					destinationSquare.isRoom(); // Destination is a room
+
+		} else {
+			valid = destinationSquare != null && // Destination is valid game square
+					(diffX > 0 || diffY > 0) && // Actually moved
+					destinationSquare.isAvailable() && // Destination is available
+					(diffX + diffY <= 1 || startSquare.connectedTo(destinationSquare)); // Move was to adjacent square, or through a secret passage
+		}
 
 		if (valid) {
 			// Update location of suspect pawn
