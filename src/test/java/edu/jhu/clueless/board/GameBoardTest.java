@@ -1,5 +1,6 @@
 package edu.jhu.clueless.board;
 
+import edu.jhu.clueless.CluelessException;
 import edu.jhu.clueless.Constants.Suspect;
 import org.junit.Test;
 
@@ -37,130 +38,158 @@ public class GameBoardTest {
 		}
 	}
 
-	@Test
-	public void testMoveToNonexistentSquare() {
+	@Test(expected = CluelessException.class)
+	public void testMoveToNonexistentSquare() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point start = board.suspectPawns.get(Suspect.COLONEL_MUSTARD);
 
-		assertFalse(board.move(Suspect.COLONEL_MUSTARD, new Point(0, 5)));
-		assertEquals(start, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
-		assertFalse(board.gameSquares.get(start).isAvailable());
+		try {
+			board.move(Suspect.COLONEL_MUSTARD, new Point(0, 5));
+		} catch (CluelessException e) {
+			assertEquals(start, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+			assertFalse(board.gameSquares.get(start).isAvailable());
+			throw e;
+		}
 	}
 
-	@Test
-	public void testNoMoveHallway() {
+	@Test(expected = CluelessException.class)
+	public void testNoMoveHallway() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point home = new Point(4, 3);
 
-		assertFalse(board.move(Suspect.COLONEL_MUSTARD, home));
-		assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
-		assertFalse(board.gameSquares.get(home).isAvailable());
+		try {
+			board.move(Suspect.COLONEL_MUSTARD, home);
+		} catch (CluelessException e) {
+			assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+			assertFalse(board.gameSquares.get(home).isAvailable());
+			throw e;
+		}
 	}
 
-	@Test
-	public void testMoveOccupiedHallway() {
+	@Test(expected = CluelessException.class)
+	public void testMoveOccupiedHallway() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point lounge = new Point(4, 4);
 		Point occupiedHallway = new Point(3, 4);
 
 		board.move(Suspect.COLONEL_MUSTARD, lounge);
 
-		assertFalse(board.move(Suspect.COLONEL_MUSTARD, occupiedHallway));
-		assertEquals(lounge, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
-		assertFalse(board.gameSquares.get(occupiedHallway).isAvailable());
+		try {
+			board.move(Suspect.COLONEL_MUSTARD, occupiedHallway);
+		} catch (CluelessException e) {
+			assertEquals(lounge, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+			assertFalse(board.gameSquares.get(occupiedHallway).isAvailable());
+			throw e;
+		}
 	}
 
 	@Test
-	public void testValidHallToRoom() {
+	public void testValidHallToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point home = new Point(4, 3);
 		Point lounge = new Point(4, 4);
 
-		assertTrue(board.move(Suspect.COLONEL_MUSTARD, lounge));
+		board.move(Suspect.COLONEL_MUSTARD, lounge);
 		assertTrue(board.gameSquares.get(home).isAvailable());
 		assertEquals(lounge, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
 	}
 
 	@Test
-	public void testValidRoomToHall() {
+	public void testValidRoomToHall() throws CluelessException{
 		GameBoard board = new GameBoard();
 		Point diningRoom = new Point(4, 2);
 		Point hallway = new Point(4, 1);
 
 		board.move(Suspect.COLONEL_MUSTARD, diningRoom);
 
-		assertTrue(board.move(Suspect.COLONEL_MUSTARD, hallway));
+		board.move(Suspect.COLONEL_MUSTARD, hallway);
 		assertFalse(board.gameSquares.get(hallway).isAvailable());
 		assertEquals(hallway, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
 	}
 
 	@Test
-	public void testValidRoomToRoom() {
+	public void testValidRoomToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point lounge = new Point(4, 4);
 		Point conservatory = new Point(0, 0);
 
 		board.move(Suspect.COLONEL_MUSTARD, lounge);
 
-		assertTrue(board.move(Suspect.COLONEL_MUSTARD, conservatory));
+		board.move(Suspect.COLONEL_MUSTARD, conservatory);
 		assertEquals(conservatory, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
 	}
 
-	@Test
-	public void testInvalidRoomToRoom() {
+	@Test(expected = CluelessException.class)
+	public void testInvalidRoomToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point diningRoom = new Point(4, 2);
 		Point conservatory = new Point(0, 0);
 
 		board.move(Suspect.COLONEL_MUSTARD, diningRoom);
 
-		assertFalse(board.move(Suspect.COLONEL_MUSTARD, conservatory));
-		assertEquals(diningRoom, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+		try {
+			board.move(Suspect.COLONEL_MUSTARD, conservatory);
+		} catch (CluelessException e) {
+			assertEquals(diningRoom, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+			throw e;
+		}
 	}
 
-	@Test
-	public void testInvalidHallToHall() {
+	@Test(expected = CluelessException.class)
+	public void testInvalidHallToHall() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point home = new Point(4, 3);
 		Point hallway = new Point(3, 2);
 
-		assertFalse(board.move(Suspect.COLONEL_MUSTARD, hallway));
-		assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
-		assertFalse(board.gameSquares.get(home).isAvailable());
-		assertTrue(board.gameSquares.get(hallway).isAvailable());
+		try {
+			board.move(Suspect.COLONEL_MUSTARD, hallway);
+		} catch (CluelessException e) {
+			assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+			assertFalse(board.gameSquares.get(home).isAvailable());
+			assertTrue(board.gameSquares.get(hallway).isAvailable());
+			throw e;
+		}
 	}
 
-	@Test
-	public void testInvalidHallToRoom() {
+	@Test(expected = CluelessException.class)
+	public void testInvalidHallToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point home = new Point(4, 3);
 		Point kitchen = new Point(4, 0);
 
-		assertFalse(board.move(Suspect.COLONEL_MUSTARD, kitchen));
-		assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
-		assertFalse(board.gameSquares.get(home).isAvailable());
+		try {
+			board.move(Suspect.COLONEL_MUSTARD, kitchen);
+		} catch (CluelessException e) {
+			assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+			assertFalse(board.gameSquares.get(home).isAvailable());
+			throw e;
+		}
 	}
 
 	@Test
-	public void testValidMoveTriggeredBySuggestion() {
+	public void testValidMoveTriggeredBySuggestion() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point home = new Point(4, 3);
 		Point library = new Point(0, 2);
 
-		assertTrue(board.move(Suspect.COLONEL_MUSTARD, library, true));
+		board.move(Suspect.COLONEL_MUSTARD, library, true);
 		assertEquals(library, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
 		assertTrue(board.gameSquares.get(home).isAvailable());
 	}
 
-	@Test
-	public void testInvalidMoveTriggeredBySuggestion() {
+	@Test(expected = CluelessException.class)
+	public void testInvalidMoveTriggeredBySuggestion() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point home = new Point(4, 3);
 		Point hallway = new Point(3, 2);
 
-		assertFalse(board.move(Suspect.COLONEL_MUSTARD, hallway, true));
-		assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
-		assertFalse(board.gameSquares.get(home).isAvailable());
+		try {
+			board.move(Suspect.COLONEL_MUSTARD, hallway, true);
+		} catch (CluelessException e) {
+			assertEquals(home, board.suspectPawns.get(Suspect.COLONEL_MUSTARD));
+			assertFalse(board.gameSquares.get(home).isAvailable());
+			throw e;
+		}
 	}
 
 }

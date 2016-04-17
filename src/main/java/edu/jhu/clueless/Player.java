@@ -60,4 +60,9 @@ public class Player {
 		return active;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("Player[id=%s, suspect=%s]", id, suspect);
+	}
+
 }

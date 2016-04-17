@@ -1,5 +1,7 @@
 package edu.jhu.clueless.board;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
+import edu.jhu.clueless.CluelessException;
 import edu.jhu.clueless.Constants.Room;
 import edu.jhu.clueless.Constants.Suspect;
 
@@ -64,6 +66,19 @@ public class GameBoard {
 		return suspectPawns.get(suspect);
 	}
 
+	/**
+	 * @param room Suspect being queried
+	 * @return Point location of given room
+	 */
+	public Point getLocation(Room room) {
+		for (Map.Entry<Point, GameSquare> square : gameSquares.entrySet()) {
+			if (square.getValue().getRoomName() == room) {
+				return square.getKey();
+			}
+		}
+		return null;
+	}
+
 	public void initializeSuspectPawns() {
 		for (Suspect suspect : Suspect.values()) {
 			Point home = null;
@@ -84,10 +99,10 @@ public class GameBoard {
 	 * Move given suspect pawn to given destination point, if allowed.
 	 * @param suspect Suspect to move
 	 * @param destination Desired destination
-	 * @return Will return true if move request was valid and game state was updated, false otherwise.
+	 * @throws CluelessException if the move request was invalid and game state was not modified.
 	 */
-	public boolean move(Suspect suspect, Point destination) {
-		return move(suspect, destination, false);
+	public void move(Suspect suspect, Point destination) throws CluelessException {
+		move(suspect, destination, false);
 	};
 
 	/**
@@ -95,35 +110,41 @@ public class GameBoard {
 	 * @param suspect Suspect to move
 	 * @param destination Desired destination
 	 * @param triggeredBySuggestion Whether this move was triggered by a suggestion
-	 * @return Will return true if move request was valid and game state was updated, false otherwise.
+	 * @throws CluelessException if the move request was invalid and game state was not modified.
 	 */
-	public boolean move(Suspect suspect, Point destination, boolean triggeredBySuggestion) {
+	public void move(Suspect suspect, Point destination, boolean triggeredBySuggestion) throws CluelessException{
 		Point start = suspectPawns.get(suspect);
 		GameSquare startSquare = gameSquares.get(start);
 		GameSquare destinationSquare = gameSquares.get(destination);
 		int diffX = Math.abs(start.x - destination.x);
 		int diffY = Math.abs(start.y - destination.y);
 
-		// Determine whether move request is valid
-		boolean valid;
-		if (triggeredBySuggestion) {
-			valid = destinationSquare != null && // Destination is valid game square
-					destinationSquare.isRoom(); // Destination is a room
-
-		} else {
-			valid = destinationSquare != null && // Destination is valid game square
-					(diffX > 0 || diffY > 0) && // Actually moved
-					destinationSquare.isAvailable() && // Destination is available
-					(diffX + diffY <= 1 || startSquare.connectedTo(destinationSquare)); // Move was to adjacent square, or through a secret passage
+		// Validate request
+		if (destinationSquare == null) {
+			throw new CluelessException(String.format("Location=%s is not a valid square on game board", destination));
+		}
+		if (triggeredBySuggestion && !destinationSquare.isRoom()) {
+			throw new CluelessException(String.format("Requested to move suspect=%s to location=%s, but this location is " +
+					"not a room", suspect, destination));
+		}
+		if (!triggeredBySuggestion) {
+			if (diffX == 0 && diffY == 0) {
+				throw new CluelessException(String.format("Current location=%s and proposed destination=%s are the same",
+						start, destination));
+			}
+			if (!destinationSquare.isAvailable()) {
+				throw new CluelessException(String.format("Requested destination=%s is not not available", destination));
+			}
+			if (diffX + diffY > 1 && !startSquare.connectedTo(destinationSquare)) {
+				throw new CluelessException(String.format("Invalid request to move from %s to %s. Must either move to an " +
+						"adjacent square or through a secret passage", start, destination));
+			}
 		}
 
-		if (valid) {
-			// Update location of suspect pawn
-			suspectPawns.put(suspect, destination);
-			startSquare.setOccupied(false);
-			destinationSquare.setOccupied(true);
-		}
-		return valid;
+		// Update location of suspect pawn
+		suspectPawns.put(suspect, destination);
+		startSquare.setOccupied(false);
+		destinationSquare.setOccupied(true);
 	};
 
 }

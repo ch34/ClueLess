@@ -2,6 +2,8 @@ package edu.jhu.clueless;
 
 import com.sun.istack.internal.Nullable;
 import edu.jhu.clueless.Constants.EntityType;
+import edu.jhu.clueless.Constants.Room;
+import edu.jhu.clueless.Constants.PlayerAction;
 import edu.jhu.clueless.Constants.Suspect;
 import edu.jhu.clueless.board.GameBoard;
 
@@ -14,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Game {
 
-	private static Suspect[] TURN_ORDER = { Suspect.MISS_SCARLET, Suspect.COLONEL_MUSTARD, Suspect.MRS_WHITE,
+	private static Suspect[] SUSPECT_ORDER = { Suspect.MISS_SCARLET, Suspect.COLONEL_MUSTARD, Suspect.MRS_WHITE,
 			Suspect.MR_GREEN, Suspect.MRS_PEACOCK, Suspect.PROFESSOR_PLUM };
 
 	private UUID id;
@@ -25,8 +27,9 @@ public class Game {
 	private int indexPlayerResponding;
 	private AtomicBoolean started;
 	private Player winner;
-	private Map<EntityType, Card> currentSuggestion;
+	private Collection<Card> currentSuggestion;
 	private ConcurrentMap<Suspect, Player> players;
+	private Map<UUID, Set<PlayerAction>> allowedActions;
 
 	public Game() {
 		this("New Game");
@@ -42,6 +45,7 @@ public class Game {
 		started = new AtomicBoolean();
 		currentSuggestion = null;
 		winner = null;
+		allowedActions = new HashMap<>();
 	}
 
 	/**
@@ -56,8 +60,15 @@ public class Game {
 		if (started.compareAndSet(false, true)) {
 			distributeCards();
 			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+			initializeAllowedActions();
 		}
 		return true;
+	}
+
+	private void initializeAllowedActions() {
+		for (Player player : players.values()) {
+			allowedActions.put(player.getID(), new HashSet<>(Arrays.asList(PlayerAction.MOVE, PlayerAction.ACCUSE)));
+		}
 	}
 
 	private void distributeCards() {
@@ -81,7 +92,7 @@ public class Game {
 		int indexPlayer = rotatePlayerIndex(-1, true);
 		for (Iterator<Card> iterator = cards.iterator(); iterator.hasNext();) {
 			Card card = iterator.next();
-			Player player = players.get(TURN_ORDER[indexPlayer]);
+			Player player = players.get(SUSPECT_ORDER[indexPlayer]);
 			player.addCard(card);
 			iterator.remove();
 			indexPlayer = rotatePlayerIndex(indexPlayer, true);
@@ -126,7 +137,7 @@ public class Game {
 		if (!started.get()|| winner != null) {
 			return null;
 		}
-		return players.get(TURN_ORDER[indexPlayerTurn]);
+		return players.get(SUSPECT_ORDER[indexPlayerTurn]);
 	}
 
 	/**
@@ -159,120 +170,212 @@ public class Game {
 	private boolean isPlayerTurn(Player player) {
 		return isStarted() &&
 			winner == null &&
-			player.getSuspect().equals(TURN_ORDER[indexPlayerTurn]);
+			player.getSuspect().equals(SUSPECT_ORDER[indexPlayerTurn]);
 	}
 
 	private int rotatePlayerIndex(int currIndex, boolean mustBeActive) {
 		int newIndex = incrementCounterModPlayers(currIndex);
-		Player nextPlayer = players.get(TURN_ORDER[newIndex]);
+		Player nextPlayer = players.get(SUSPECT_ORDER[newIndex]);
 		while (nextPlayer == null || (mustBeActive && !nextPlayer.isActive())) {
 			newIndex = incrementCounterModPlayers(newIndex);
-			nextPlayer = players.get(TURN_ORDER[newIndex]);
+			nextPlayer = players.get(SUSPECT_ORDER[newIndex]);
 		}
 		return newIndex;
 	}
 
 	private int incrementCounterModPlayers(int counter) {
-		return (counter + 1) % TURN_ORDER.length;
+		return (counter + 1) % SUSPECT_ORDER.length;
 	}
 
 	/**
 	 * Move player to given destination
 	 * @param player Player to move
 	 * @param point Destination to move player to
-	 * @return True if move request was valid and game state was updated as a result, false otherwise.
+	 * @throws CluelessException if the move request was invalid and game state was not modified.
 	 */
-	public boolean move(Player player, Point point) {
-		boolean valid = isPlayerTurn(player) &&
-				board.move(player.getSuspect(), point);
+	public void move(Player player, Point point) throws CluelessException {
+		Set<PlayerAction> allowed = allowedActions.get(player.getID());
 
-		// If player moved into a hallway, their turn is over. If they moved into a room, they can make a suggestion.
-		if (valid && board.getRoom(point) == null) {
-			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+		// Validate request
+		if (!isPlayerTurn(player)) {
+			throw new CluelessException("Player requested to move out of turn");
+		}
+		if (!allowed.contains(PlayerAction.MOVE)) {
+			throw new CluelessException(String.format("Not allowed to move. Valid actions=%s", allowed));
 		}
 
-		return valid;
+		board.move(player.getSuspect(), point);
+		allowed.remove(PlayerAction.MOVE);
+
+		if (board.getRoom(point) != null) {
+			allowed.add(PlayerAction.SUGGEST);
+		}
 	};
 
 	/**
 	 * @param player Player making suggestion
 	 * @param suggestion Player's suggestion
-	 * @return True if suggestion is valid and game state is updated as a result, false otherwise.
+	 * @throws CluelessException if the request was invalid and game state was not modified.
 	 */
-	public boolean suggest(Player player, Map<EntityType, Card> suggestion) {
+	public void suggest(Player player, Collection<Card> suggestion) throws CluelessException {
 		Point playerLocation = board.getLocation(player.getSuspect());
+		Room playerRoom = board.getRoom(playerLocation);
+		Card suggestionRoom = getTypeFromProposal(suggestion, EntityType.ROOM);
+		Set<PlayerAction> allowed = allowedActions.get(player.getID());
 
-		boolean valid = isPlayerTurn(player) &&
-				suggestion.size() == 3 &&
-				board.getRoom(playerLocation) == suggestion.get(EntityType.ROOM);
-
-		if (valid) {
-			// Move suggestion's suspect to suggestion's room
-			board.move((Suspect) suggestion.get(EntityType.SUSPECT), playerLocation, true);
-
-			// Save this player's suggestion for comparison against responses
-			currentSuggestion = suggestion;
-
-			// Initialize rotation for players' responses
-			indexPlayerResponding = rotatePlayerIndex(indexPlayerTurn, false);
+		// Validate request
+		if (!isPlayerTurn(player)) {
+			throw new CluelessException("Player requested to suggest out of turn");
+		}
+		if (!allowed.contains(PlayerAction.SUGGEST)) {
+			throw new CluelessException(String.format("Not allowed to suggest. Valid actions=%s", allowed));
+		}
+		if (isValidProposal(suggestion))  {
+			throw new CluelessException(String.format("Invalid suggestion=%s. Must include exactly one suspect, weapon, "
+					+ "and room", suggestion));
+		}
+		if (playerRoom != suggestionRoom) {
+			throw new CluelessException(String.format("Player is in room=%s, but made a suggestion about room=%s",
+					playerRoom, suggestionRoom));
 		}
 
-		return valid;
-	}
-
-	/**
-	 * Check if this player's response to the current suggestion is valid.
-	 * @param player Player responding
-	 * @param response Player's response, or null if player cannot disprove suggestion.
-	 * @return True if this response is valid and game state is updated as a result, false otherwise.
-	 */
-	public boolean isResponseValid(Player player, @Nullable Card response) {
-		boolean valid;
-		if (currentSuggestion == null) {
-			valid = false;
-		} else if (!player.getSuspect().equals(TURN_ORDER[indexPlayerResponding])) {
-			valid = false;
-		} else if (response == null) {
-			valid = !player.hasAnyCard(currentSuggestion.values());
-		} else {
-			valid = currentSuggestion.containsValue(response) && player.hasCard(response);
-		}
-
-		if (valid) {
-			indexPlayerResponding = rotatePlayerIndex(indexPlayerResponding, false);
-
-			// If we've wrapped back around to the original suggester, the response cycle is over, and the main turn
-			// cycle continues
-			if (indexPlayerResponding == indexPlayerTurn) {
-				currentSuggestion = null;
-				indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+		// Move suggestion's suspect to suggestion's room, if necessary
+		Suspect suggestedSuspect = (Suspect) getTypeFromProposal(suggestion, EntityType.SUSPECT);
+		Point locationSuggestedSuspect = board.getLocation(suggestedSuspect);
+		if (!locationSuggestedSuspect.equals(playerLocation)) {
+			board.move(suggestedSuspect, playerLocation, true);
+			Player suggestedPlayer = players.get(suggestedSuspect);
+			if (suggestedPlayer != null) {
+				Set<PlayerAction> allowedSuggestedPlayer = allowedActions.get(suggestedPlayer.getID());
+				allowedSuggestedPlayer.add(PlayerAction.SUGGEST);
 			}
 		}
 
-		return valid;
+		allowed.remove(PlayerAction.SUGGEST);
+
+		// Save this player's suggestion for comparison against responses
+		currentSuggestion = suggestion;
+
+		// Initialize rotation for players' responses
+		indexPlayerResponding = rotatePlayerIndex(indexPlayerTurn, false);
+	}
+
+	/**
+	 * @param player Player responding
+	 * @param response Player's response, or null if player cannot disprove suggestion.
+	 * @return True if there are more players to respond to suggestion, false if this was the last one.
+	 * @throws CluelessException if the request was invalid and game state was not modified.
+	 */
+	public boolean respond(Player player, @Nullable Card response) throws CluelessException {
+		// Validate request
+		if (currentSuggestion == null) {
+			throw new CluelessException("Player responded to a suggestion, but no suggestion in progress");
+		}
+		if (!player.getSuspect().equals(SUSPECT_ORDER[indexPlayerResponding])) {
+			throw new CluelessException("Player responded to suggestion out of turn");
+		}
+		if (response == null && player.hasAnyCard(currentSuggestion)) {
+			throw new CluelessException(String.format("Player is able to disprove suggestion=%s", currentSuggestion));
+		}
+		if (response != null) {
+			if (!currentSuggestion.contains(response)) {
+				throw new CluelessException(String.format("Response card=%s was not included in original suggestion=%s",
+						response, currentSuggestion));
+			}
+			if (!player.hasCard(response)) {
+				throw new CluelessException(String.format("Player responded card=%s not in their hand", response));
+			}
+		}
+
+		indexPlayerResponding = rotatePlayerIndex(indexPlayerResponding, false);
+
+		// If we've wrapped back around to the original suggester, the response cycle is over, and the main turn
+		// cycle continues
+		if (indexPlayerResponding == indexPlayerTurn) {
+			currentSuggestion = null;
+			return false;
+		}
+		return true;
 	}
 
 	/**
 	 * @param player Player making accusation
 	 * @param accusation Player's accusation
-	 * @return True if accusation is valid (not necessarily correct) and game state is updated as a result, false
-	 * otherwise.
+	 * @return True if the accusation was correct and the player has won the game, false otherwise.
+	 * @throws CluelessException if the request was invalid and game state was not modified.
 	 */
-	public boolean accuse(Player player, Map<EntityType, Card> accusation) {
-		boolean valid = isPlayerTurn(player) &&
-				accusation.size() == 3;
+	public boolean accuse(Player player, Collection<Card> accusation) throws CluelessException {
+		Set<PlayerAction> allowed = allowedActions.get(player.getID());
 
-		if (valid) {
-			if (accusation.get(EntityType.SUSPECT) == caseFile.get(EntityType.SUSPECT) &&
-					accusation.get(EntityType.WEAPON) == caseFile.get(EntityType.WEAPON) &&
-					accusation.get(EntityType.ROOM) == caseFile.get(EntityType.ROOM)) {
-				winner = player;
-			} else {
-				player.setActive(false);
+		// Validate request
+		if (isPlayerTurn(player)) {
+			throw new CluelessException("Player made accusation out of turn");
+		}
+		if (!allowed.contains(PlayerAction.ACCUSE)) {
+			throw new CluelessException(String.format("Not allowed to accuse. Valid actions=%s", allowed));
+		}
+		if (!isValidProposal(accusation)) {
+			throw new CluelessException(String.format("Invalid accusation=%s. Must include exactly one suspect, one " +
+					"weapon, and  one room", accusation));
+		}
+
+		allowed.remove(PlayerAction.ACCUSE);
+		if (getTypeFromProposal(accusation, EntityType.SUSPECT) == caseFile.get(EntityType.SUSPECT) &&
+			getTypeFromProposal(accusation, EntityType.WEAPON) == caseFile.get(EntityType.WEAPON) &&
+			getTypeFromProposal(accusation, EntityType.ROOM) == caseFile.get(EntityType.ROOM)) {
+			winner = player;
+		} else {
+			player.setActive(false);
+
+			// If player is in a hallway, move them into the billiard room so they won't block anyone
+			Suspect suspect = player.getSuspect();
+			Point playerLocation = board.getLocation(player.getSuspect());
+			if (board.getRoom(playerLocation) == null) {
+				board.move(suspect, board.getLocation(Room.BILLIARD_ROOM), true);
 			}
 		}
 
-		return valid;
+		return winner != null;
+	}
+
+	public void endTurn(Player player) throws CluelessException {
+		// Validate request
+		if (isPlayerTurn(player)) {
+			throw new CluelessException("Player requested to end turn, but it is not their turn");
+		}
+
+		Set<PlayerAction> allowed = allowedActions.get(player.getID());
+		allowed.add(PlayerAction.MOVE);
+		allowed.add(PlayerAction.ACCUSE);
+		indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+	}
+
+	private boolean isValidProposal(Collection<Card> proposal) {
+		if (proposal.size() != 3) {
+			return false;
+		}
+		for (EntityType type : EntityType.values()) {
+			boolean present = false;
+			for (Card card : proposal) {
+				if (card.getType() == type) {
+					present = true;
+					break;
+				}
+			}
+			if (!present) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Card getTypeFromProposal(Collection<Card> cards, EntityType type) {
+		for (Card card : cards) {
+			if (card.getType() == type) {
+				return card;
+			}
+		}
+		return null;
 	}
 
 }

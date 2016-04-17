@@ -30,4 +30,8 @@ public class Constants {
 		}
 	}
 
+	public enum PlayerAction {
+		MOVE, SUGGEST, ACCUSE
+	}
+
 }
