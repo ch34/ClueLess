@@ -20,32 +20,42 @@ public class GameTest {
 		assertNotNull(game.getId());
 		assertEquals("Test Game", game.getName());
 		assertEquals(0, game.getPlayers().size());
-		assertFalse(game.isStarted());
+		assertFalse(game.getActive());
 	}
 
-	@Test
-	public void testAddPlayerSuspectTaken() {
+	@Test(expected = CluelessException.class)
+	public void testAddPlayerSuspectTaken() throws CluelessException {
 		Game game = new Game();
 
 		assertNotNull(game.addPlayer(Suspect.COLONEL_MUSTARD));
-		assertNull(game.addPlayer(Suspect.COLONEL_MUSTARD));
-		assertEquals(1, game.getPlayers().size());
+
+		try {
+			assertNull(game.addPlayer(Suspect.COLONEL_MUSTARD));
+		} catch (CluelessException e) {
+			assertEquals(1, game.getPlayers().size());
+			throw e;
+		}
 	}
 
-	@Test
-	public void testAddPlayerGameStarted() {
+	@Test(expected = CluelessException.class)
+	public void testAddPlayerGameStarted() throws CluelessException {
 		Game game = new Game();
 
 		assertNotNull(game.addPlayer(Suspect.COLONEL_MUSTARD));
 		assertNotNull(game.addPlayer(Suspect.PROFESSOR_PLUM));
 		assertNotNull(game.addPlayer(Suspect.MR_GREEN));
 		game.start();
-		assertNull(game.addPlayer(Suspect.MISS_SCARLET));
-		assertEquals(3, game.getPlayers().size());
+
+		try {
+			assertNull(game.addPlayer(Suspect.COLONEL_MUSTARD));
+		} catch (CluelessException e) {
+			assertEquals(3, game.getPlayers().size());
+			throw e;
+		}
 	}
 
 	@Test
-	public void testStartGameSuccess() {
+	public void testStartGameSuccess() throws CluelessException {
 		Game game = new Game();
 		game.addPlayer(Suspect.COLONEL_MUSTARD);
 		game.addPlayer(Suspect.MR_GREEN);
@@ -79,6 +89,14 @@ public class GameTest {
 	public void testStartGameFail() {
 		Game game = new Game();
 		assertFalse(game.start());
+	}
+
+	@Test(expected = CluelessException.class)
+	public void testSuggestHallway() throws CluelessException {
+		Game game = new Game();
+		game.addPlayer(Suspect.COLONEL_MUSTARD);
+		game.addPlayer(Suspect.MISS_SCARLET);
+		game.addPlayer(Suspect.PROFESSOR_PLUM);
 	}
 
 }

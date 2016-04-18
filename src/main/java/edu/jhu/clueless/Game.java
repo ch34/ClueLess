@@ -25,7 +25,7 @@ public class Game {
 	private Map<EntityType, Card> caseFile;
 	private int indexPlayerTurn;
 	private int indexPlayerResponding;
-	private AtomicBoolean started;
+	private AtomicBoolean active;
 	private Player winner;
 	private Collection<Card> currentSuggestion;
 	private ConcurrentMap<Suspect, Player> players;
@@ -42,22 +42,22 @@ public class Game {
 		caseFile = new HashMap<>();
 		players = new ConcurrentHashMap<>();
 		indexPlayerTurn = -1;
-		started = new AtomicBoolean();
+		active = new AtomicBoolean();
 		currentSuggestion = null;
 		winner = null;
 		allowedActions = new HashMap<>();
 	}
 
 	/**
-	 * @return True if the game was started successfully (or was already started), false if the game could not be
-	 * started because there are not at least three players
+	 * @return True if the game was active successfully (or was already active), false if the game could not be
+	 * active because there are not at least three players
 	 */
 	public boolean start() {
 		if (players.size() < 3) {
 			return false;
 		}
-		// Only initialize game if it was not already started
-		if (started.compareAndSet(false, true)) {
+		// Only initialize game if it was not already active
+		if (active.compareAndSet(false, true)) {
 			distributeCards();
 			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
 			initializeAllowedActions();
@@ -119,8 +119,8 @@ public class Game {
 		return Collections.unmodifiableMap(caseFile);
 	}
 
-	public boolean isStarted() {
-		return started.get();
+	public boolean getActive() {
+		return active.get();
 	}
 
 	/**
@@ -131,27 +131,33 @@ public class Game {
 	}
 
 	/**
-	 * @return Player whose turn it is, or null if game is not yet started or has already been won.
+	 * @return Player whose turn it is, or null if game is not active.
 	 */
 	public Player getPlayerTurn() {
-		if (!started.get()|| winner != null) {
+		if (!active.get()) {
 			return null;
 		}
 		return players.get(SUSPECT_ORDER[indexPlayerTurn]);
 	}
 
 	/**
-	 * Add new player to the game, if the given suspect is available and game is not started.
+	 * Add new player to the game, if the given suspect is available and game is not active.
 	 * @param suspect Suspect to associate with the new player.
 	 * @return Id of the new player, or null if the player could not be added.
 	 */
-	public UUID addPlayer(Suspect suspect) {
-		if (started.get()) {
-			return null;
+	public UUID addPlayer(Suspect suspect) throws CluelessException {
+		if (active.get()) {
+			throw new CluelessException("Game already started");
 		}
+
 		Player newPlayer = new Player(suspect);
 		Player existingPlayer = players.putIfAbsent(suspect, newPlayer);
-		return existingPlayer == null ? newPlayer.getID() : null;
+
+		if (existingPlayer != null) {
+			throw new CluelessException("The requested suspect is already taken");
+		}
+
+		return newPlayer.getID();
 	}
 
 	/**
@@ -168,7 +174,7 @@ public class Game {
 	}
 
 	private boolean isPlayerTurn(Player player) {
-		return isStarted() &&
+		return getActive() &&
 			winner == null &&
 			player.getSuspect().equals(SUSPECT_ORDER[indexPlayerTurn]);
 	}
@@ -197,9 +203,7 @@ public class Game {
 		Set<PlayerAction> allowed = allowedActions.get(player.getID());
 
 		// Validate request
-		if (!isPlayerTurn(player)) {
-			throw new CluelessException("Player requested to move out of turn");
-		}
+		validateActionCommon(player, "move");
 		if (!allowed.contains(PlayerAction.MOVE)) {
 			throw new CluelessException(String.format("Not allowed to move. Valid actions=%s", allowed));
 		}
@@ -224,9 +228,7 @@ public class Game {
 		Set<PlayerAction> allowed = allowedActions.get(player.getID());
 
 		// Validate request
-		if (!isPlayerTurn(player)) {
-			throw new CluelessException("Player requested to suggest out of turn");
-		}
+		validateActionCommon(player, "suggest");
 		if (!allowed.contains(PlayerAction.SUGGEST)) {
 			throw new CluelessException(String.format("Not allowed to suggest. Valid actions=%s", allowed));
 		}
@@ -298,6 +300,15 @@ public class Game {
 		return true;
 	}
 
+	private void validateActionCommon(Player player, String action) throws CluelessException {
+		if (!active.get()) {
+			throw new CluelessException("Game not started or has already ended");
+		}
+		if (!isPlayerTurn(player)) {
+			throw new CluelessException("Player requested to " + action + " out of turn");
+		}
+	}
+
 	/**
 	 * @param player Player making accusation
 	 * @param accusation Player's accusation
@@ -308,9 +319,7 @@ public class Game {
 		Set<PlayerAction> allowed = allowedActions.get(player.getID());
 
 		// Validate request
-		if (isPlayerTurn(player)) {
-			throw new CluelessException("Player made accusation out of turn");
-		}
+		validateActionCommon(player, "accuse");
 		if (!allowed.contains(PlayerAction.ACCUSE)) {
 			throw new CluelessException(String.format("Not allowed to accuse. Valid actions=%s", allowed));
 		}
@@ -335,6 +344,8 @@ public class Game {
 			}
 		}
 
+		endTurn(player);
+
 		return winner != null;
 	}
 
@@ -344,10 +355,31 @@ public class Game {
 			throw new CluelessException("Player requested to end turn, but it is not their turn");
 		}
 
-		Set<PlayerAction> allowed = allowedActions.get(player.getID());
-		allowed.add(PlayerAction.MOVE);
-		allowed.add(PlayerAction.ACCUSE);
-		indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+		if (player.isActive()) {
+			Set<PlayerAction> allowed = allowedActions.get(player.getID());
+			allowed.add(PlayerAction.MOVE);
+			allowed.add(PlayerAction.ACCUSE);
+
+		} else {
+			allowedActions.remove(player.getID());
+		}
+
+		// Set the game to inactive if there are no more players left, otherwise rotate to the next player
+		if (getNumActivePlayers() < 1) {
+			active.compareAndSet(true, false);
+		} else {
+			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
+		}
+	}
+
+	private int getNumActivePlayers() {
+		int count = 0;
+		for (Player player : players.values()) {
+			if (player.isActive()) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	private boolean isValidProposal(Collection<Card> proposal) {
