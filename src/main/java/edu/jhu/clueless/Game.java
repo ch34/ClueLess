@@ -22,13 +22,29 @@ public class Game {
 	private UUID id;
 	private String name;
 	private GameBoard board;
-	private Map<EntityType, Card> caseFile;
-	private int indexPlayerTurn;
-	private int indexPlayerResponding;
-	private AtomicBoolean active;
 	private Player winner;
+	protected ConcurrentMap<Suspect, Player> players;
+	protected int indexPlayerTurn;
+	private int indexPlayerResponding;
+
+	/**
+	 * Whether the game is currently in an active state (started and still running)
+	 */
+	private AtomicBoolean active;
+
+	/**
+	 * Suggestion that is currently in progress, if any. This is persisted throughout the response cycle.
+	 */
 	private Collection<Card> currentSuggestion;
-	private ConcurrentMap<Suspect, Player> players;
+
+	/**
+	 * Case file that contains the suspect, room, and weapon answer for this game
+	 */
+	private Map<EntityType, Card> caseFile;
+
+	/**
+	 * Actions (i.e. move, suggest, or accuse), that each player is currently allowed to take
+	 */
 	private Map<UUID, Set<PlayerAction>> allowedActions;
 
 	public Game() {
@@ -49,12 +65,11 @@ public class Game {
 	}
 
 	/**
-	 * @return True if the game was active successfully (or was already active), false if the game could not be
-	 * active because there are not at least three players
+	 * @throws CluelessException if there are not sufficient players to start the game
 	 */
-	public boolean start() {
+	public void start() throws CluelessException {
 		if (players.size() < 3) {
-			return false;
+			throw new CluelessException("Game cannot be started without at least 3 players");
 		}
 		// Only initialize game if it was not already active
 		if (active.compareAndSet(false, true)) {
@@ -62,7 +77,6 @@ public class Game {
 			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
 			initializeAllowedActions();
 		}
-		return true;
 	}
 
 	private void initializeAllowedActions() {
@@ -119,7 +133,7 @@ public class Game {
 		return Collections.unmodifiableMap(caseFile);
 	}
 
-	public boolean getActive() {
+	public boolean isActive() {
 		return active.get();
 	}
 
@@ -174,12 +188,10 @@ public class Game {
 	}
 
 	private boolean isPlayerTurn(Player player) {
-		return getActive() &&
-			winner == null &&
-			player.getSuspect().equals(SUSPECT_ORDER[indexPlayerTurn]);
+		return player.getSuspect().equals(SUSPECT_ORDER[indexPlayerTurn]);
 	}
 
-	private int rotatePlayerIndex(int currIndex, boolean mustBeActive) {
+	protected int rotatePlayerIndex(int currIndex, boolean mustBeActive) {
 		int newIndex = incrementCounterModPlayers(currIndex);
 		Player nextPlayer = players.get(SUSPECT_ORDER[newIndex]);
 		while (nextPlayer == null || (mustBeActive && !nextPlayer.isActive())) {
@@ -232,7 +244,7 @@ public class Game {
 		if (!allowed.contains(PlayerAction.SUGGEST)) {
 			throw new CluelessException(String.format("Not allowed to suggest. Valid actions=%s", allowed));
 		}
-		if (isValidProposal(suggestion))  {
+		if (!isValidProposal(suggestion))  {
 			throw new CluelessException(String.format("Invalid suggestion=%s. Must include exactly one suspect, weapon, "
 					+ "and room", suggestion));
 		}
@@ -301,11 +313,14 @@ public class Game {
 	}
 
 	private void validateActionCommon(Player player, String action) throws CluelessException {
-		if (!active.get()) {
+		if (!active.get() || winner != null) {
 			throw new CluelessException("Game not started or has already ended");
 		}
 		if (!isPlayerTurn(player)) {
 			throw new CluelessException("Player requested to " + action + " out of turn");
+		}
+		if (currentSuggestion != null) {
+			throw new CluelessException("Player requested to " + action + ", but suggestion is in progress");
 		}
 	}
 
@@ -329,13 +344,12 @@ public class Game {
 		}
 
 		allowed.remove(PlayerAction.ACCUSE);
+		Player gameWinner = null;
 		if (getTypeFromProposal(accusation, EntityType.SUSPECT) == caseFile.get(EntityType.SUSPECT) &&
 			getTypeFromProposal(accusation, EntityType.WEAPON) == caseFile.get(EntityType.WEAPON) &&
 			getTypeFromProposal(accusation, EntityType.ROOM) == caseFile.get(EntityType.ROOM)) {
-			winner = player;
+			gameWinner = player;
 		} else {
-			player.setActive(false);
-
 			// If player is in a hallway, move them into the billiard room so they won't block anyone
 			Suspect suspect = player.getSuspect();
 			Point playerLocation = board.getLocation(player.getSuspect());
@@ -344,16 +358,19 @@ public class Game {
 			}
 		}
 
+		player.setActive(false);
 		endTurn(player);
+
+		if (gameWinner != null) {
+			active.compareAndSet(true, false);
+			winner = gameWinner;
+		}
 
 		return winner != null;
 	}
 
 	public void endTurn(Player player) throws CluelessException {
-		// Validate request
-		if (isPlayerTurn(player)) {
-			throw new CluelessException("Player requested to end turn, but it is not their turn");
-		}
+		validateActionCommon(player, "end turn");
 
 		if (player.isActive()) {
 			Set<PlayerAction> allowed = allowedActions.get(player.getID());

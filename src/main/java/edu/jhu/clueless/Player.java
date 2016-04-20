@@ -4,7 +4,7 @@ import edu.jhu.clueless.Constants.Suspect;
 
 import java.util.*;
 
-public class Player {
+public class Player implements Comparable<Player> {
 
 	private UUID id;
 	private Suspect suspect;
@@ -65,4 +65,9 @@ public class Player {
 		return String.format("Player[id=%s, suspect=%s]", id, suspect);
 	}
 
+
+	@Override
+	public int compareTo(Player o) {
+		return this.id.compareTo(o.getID());
+	}
 }

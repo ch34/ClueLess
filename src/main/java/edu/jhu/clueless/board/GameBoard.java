@@ -1,6 +1,5 @@
 package edu.jhu.clueless.board;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import edu.jhu.clueless.CluelessException;
 import edu.jhu.clueless.Constants.Room;
 import edu.jhu.clueless.Constants.Suspect;
@@ -103,7 +102,7 @@ public class GameBoard {
 	 */
 	public void move(Suspect suspect, Point destination) throws CluelessException {
 		move(suspect, destination, false);
-	};
+	}
 
 	/**
 	 * Move given suspect pawn to given destination point, if allowed.
@@ -133,7 +132,7 @@ public class GameBoard {
 						start, destination));
 			}
 			if (!destinationSquare.isAvailable()) {
-				throw new CluelessException(String.format("Requested destination=%s is not not available", destination));
+				throw new CluelessException(String.format("Requested destination=%s is not available", destination));
 			}
 			if (diffX + diffY > 1 && !startSquare.connectedTo(destinationSquare)) {
 				throw new CluelessException(String.format("Invalid request to move from %s to %s. Must either move to an " +
