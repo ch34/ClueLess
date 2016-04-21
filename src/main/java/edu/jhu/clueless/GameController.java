@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,13 +16,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 /**
  * The client will subscribe to minimum of three channels.
  * 1) user channel where messages are sent only to them
- * 2) chat channel where messages can be sent to anyone
- * 3) game channel where messages are sent only to players in that game
- * 4) (Optional) error channel where any exceptions / errors will be sent
- * 
- * TODO - remove all @SendTo except for @SendTo("/queue/chat")
- * This can not be done until gameId has been implemented
- * 
+ * 2) game channel where messages are sent only to players in that game
+ * 3) (Optional) error channel where any exceptions / errors will be sent
+ *  
  * @author Chris
  * @date Feb 18, 2016
  */
@@ -62,6 +57,12 @@ public class GameController {
 	
 	
 //### Methods Called Via Http / Ajax calls ###//
+	/**
+	 * Returns the Game page
+	 * 
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value = "home", method = RequestMethod.GET)
 	public String getGamePage(HttpServletRequest request){
 		// Generate the players id add add it to their session
@@ -74,7 +75,8 @@ public class GameController {
 		
 	}
 	
-	/* (non-JavaDoc)
+	/* Note: Not currently being used by the client
+	 * (non-JavaDoc)
 	 * URL will look like 
 	 * http[s]://server[:port]/{app}/home/getGame?id={someId}
 	 */
@@ -85,85 +87,126 @@ public class GameController {
 		return "TODO";
 	}
 	
+	/**
+	 * Returns an array of available games that have not started
+	 * and are not full
+	 * 
+	 * @return Array of available Game ID's
+	 */
 	@RequestMapping(value = "home/getGames")
 	@ResponseBody
 	public String[] getAvailableGames(){
 		// Should only return games that are not full and not started
-		String[] myStrings = {"TODO1","TODO2"};
+		String[] myStrings = {"game1","game2"};
 		// TODO
 		return myStrings;
 	}
 	
-	@RequestMapping(value = "createGame") 
+	/**
+	 * Create a new game
+	 * 
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping(value = "home/createGame") 
 	@ResponseBody
 	public String createGame(@RequestParam(name="id") String id){
-		// TODO
+		// TODO - return the games ID
+		// We do not join the player here. They make a separate request
+		// to join to the game as they will need to select a character first
+		
 		return "TODO";
 	}
 	
-
-//### Methods Called Via WebSocket ###//
-	@MessageMapping("joinGame") // maps to /app/createGame
-	public void joinGame(ClientAction client){
-		// TODO
+	/**
+	 * Adds a player to an existing game
+	 * 
+	 * @param gameId Id of game player wants to join
+	 * @param character Suspect player is controlling
+	 * @param request HttpServletRequest for setting session data
+	 * @return
+	 */
+	@RequestMapping("home/joinGame") 
+	@ResponseBody
+	public String joinGame(@RequestParam(name="id") String gameId,
+			@RequestParam(name="suspect") String character,
+			HttpServletRequest request){
+		// TODO - join the game
 		
-		String message = "User " + client.getPlayerId() + 
-				" has joined the session.";
-		sendGameMessageAllPlayers(client.getGameId(), message);
+		String playerId = (String)request.getSession()
+				.getAttribute(SESSION_CLIENT_ID);
+		String message = "User " + playerId + " has joined the session.";
+		sendGameMessageAllPlayers(GameController.CHANNEL_GAME + gameId, message);
+		
+		// lastly - add the gameid to the players session only
+		// if joining game succeeded
+		request.getSession().setAttribute("gameId", gameId);
+		return "success";
 	}
-	
-	// If returning an object it then sends response
-	// to /topic by default.
-	// Below we override the default /topic and instead
-	// send it to /queue/game so every client gets the response
-	// Remember this should be removed so we only send to
-	// users of the specified game
+
+//### Methods Called Via WebSocket ###//	
+
+	/**
+	 * Processes Player Movement requests
+	 * @param client
+	 */
 	@MessageMapping("move") 
 	public void gameMove(ClientAction client){
 		// TODO
 		sendGameMessageAllPlayers(client.getGameId(), "Action Move");
 	}
 	
+	/**
+	 * Processes Game Start requests
+	 * @param client
+	 */
 	@MessageMapping("start")
 	public void gameStart(ClientAction client){
 		// TODO
 		sendGameMessageAllPlayers(client.getGameId(), "Game has started");
 	}
 	
+	/**
+	 * Processes Game Suggestions
+	 * @param client
+	 */
 	@MessageMapping("suggest")
-	@SendTo("/queue/game")
 	public void gameSuggest(ClientAction client){
 		// TODO game logic
 		// finally change playerId to the suggest users playerid
 		sendMessageToUser(client.getPlayerId(), client);
 	}
 	
-	@MessageMapping("respond-suggest")
-	@SendTo("/queue/game")
+	/**
+	 * Processes Game Responses to Suggestions
+	 * @param client
+	 */
+	@MessageMapping("respondsuggest")
 	public void gameRespondSuggest(ClientAction client){
 		// TODO
 		sendGameMessageAllPlayers(client.getGameId(), client);
 	}
 	
+	/**
+	 * Processes Game Accusations
+	 * @param client
+	 */
 	@MessageMapping("accuse")
 	public void gameAccuse(ClientAction client){
 		// TODO
 		sendGameMessageAllPlayers(client.getGameId(), client);
 	}
 	
-	// This demonstrates how to send to a specific user
-	@MessageMapping("testUser")
-	public void testMessage(ClientAction client){
-		// users all subscribe to /queue/user-### for their messages
-		String user = GameController.CHANNEL_USER + client.getPlayerId();
-		sendMessageToUser(user, "Hello to you only!");
-	}
-	
+	/**
+	 * Delivers a game chat message to all players of the game
+	 * @param client
+	 */
 	@MessageMapping("chat")
 	public void gameChat(ClientAction client){
 		// only send to clients of the connected game
-		// just reiterate the message
-		// TODO add a field for chat to the DTO
+		// just reiterate the message while updating who sent it
+		String msg = client.getMessage();
+		client.setMessage("Player " + client.getPlayerId() + ": " + msg);
 		sendGameMessageAllPlayers(client.getGameId(), client);
 	}
 	
