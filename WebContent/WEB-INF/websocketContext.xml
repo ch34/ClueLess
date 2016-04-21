@@ -13,21 +13,30 @@
    http://www.springframework.org/schema/mvc
    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
-<!--
-   <context:component-scan base-package="edu.jhu.clueless" />
-
+   <context:annotation-config/>
+   
+   <context:component-scan base-package="edu.jhu.clueless"  use-default-filters="false">
+	 	<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	 	<context:include-filter type="annotation" expression="org.springframework.stereotype.Component"/>
+   </context:component-scan>
+  
+   <mvc:annotation-driven />
+ 
+   <mvc:resources mapping="/resources/**" location="/resources/" />
+ 
    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-      	<property name="prefix" value="/WEB-INF/jsp/" />
+      	<property name="prefix" value="/WEB-INF/pages/" />
       	<property name="suffix" value=".jsp" />
    </bean>
-
-   <mvc:resources mapping="/webSock.html" location="/" />
--->  
-
-   <bean id="websocket" class="edu.jhu.clueless.WebsocketEndPoint"/>
-   
-   <websocket:handlers>
-   		<websocket:mapping path="/websocket" handler="websocket"/>
-   </websocket:handlers>
+  
+   <websocket:message-broker application-destination-prefix="/app">
+		<websocket:stomp-endpoint path="/stomp">
+			<websocket:handshake-interceptors>
+                <bean class="org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor"/>
+            </websocket:handshake-interceptors>
+		<!-- <websocket:sockjs />  -->
+		</websocket:stomp-endpoint>
+		<websocket:simple-broker prefix="/topic,/queue" />
+	</websocket:message-broker>
 
 </beans>
