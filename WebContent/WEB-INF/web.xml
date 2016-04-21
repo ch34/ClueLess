@@ -6,25 +6,11 @@
   </welcome-file-list>
   
   <!-- Spring Config Here 
-  Also need the Context element
+  Add the Context element for any global context data
+  such as Spring Security for login,etc.
   -->
   <servlet>
   	<servlet-name>dispatcher</servlet-name>
-        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-        <init-param>
-        	<param-name>contextConfigLocation</param-name>
-        	<param-value>/WEB-INF/defaultContext.xml</param-value>
-    	</init-param>
-        <load-on-startup>1</load-on-startup>
-  </servlet>
-  
-  <servlet-mapping>
- 	<servlet-name>dispatcher</servlet-name>
- 	<url-pattern>/app/*</url-pattern>
-  </servlet-mapping>
- 
-  <servlet>
-  	<servlet-name>Messaging</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
         <init-param>
         	<param-name>contextConfigLocation</param-name>
@@ -34,8 +20,8 @@
   </servlet>
   
   <servlet-mapping>
- 	<servlet-name>Messaging</servlet-name>
- 	<url-pattern>/message/*</url-pattern>
+ 	<servlet-name>dispatcher</servlet-name>
+ 	<url-pattern>/</url-pattern>
   </servlet-mapping>
-  
+
 </web-app>
