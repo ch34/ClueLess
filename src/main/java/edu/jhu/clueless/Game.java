@@ -1,6 +1,7 @@
 package edu.jhu.clueless;
 
-import com.sun.istack.internal.Nullable;
+import java.util.UUID;
+
 import edu.jhu.clueless.Constants.EntityType;
 import edu.jhu.clueless.Constants.Room;
 import edu.jhu.clueless.Constants.PlayerAction;
@@ -280,7 +281,7 @@ public class Game {
 	 * @return True if there are more players to respond to suggestion, false if this was the last one.
 	 * @throws CluelessException if the request was invalid and game state was not modified.
 	 */
-	public boolean respond(Player player, @Nullable Card response) throws CluelessException {
+	public boolean respond(Player player, Card response) throws CluelessException {
 		// Validate request
 		if (currentSuggestion == null) {
 			throw new CluelessException("Player responded to a suggestion, but no suggestion in progress");
