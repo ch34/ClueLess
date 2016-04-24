@@ -22,7 +22,9 @@ dependencies {
     		'javax.servlet:javax.servlet-api:3.0.1'
     
     runtime 'com.fasterxml.jackson.core:jackson-databind:2.3.2'
-    
+
+    testCompile 'junit:junit:4.11'
+
 }
 
 apply plugin: 'war'
@@ -33,7 +35,9 @@ war {
 	archiveName = 'clueless.war'
 }
 
-sourceCompatibility = '1.7'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 project.webAppDirName = 'WebContent'
 
 task wrapper(type: Wrapper) {
