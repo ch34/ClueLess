@@ -135,7 +135,7 @@ public class GameTest {
 	@Test(expected = CluelessException.class)
 	public void testMoveGameNotStarted() throws CluelessException {
 		Game game = new Game();
-		UUID scarlet = game.addPlayer(Suspect.MISS_SCARLET);
+		String scarlet = game.addPlayer(Suspect.MISS_SCARLET);
 		game.move(game.getPlayer(scarlet), new Point(4, 4));
 	}
 

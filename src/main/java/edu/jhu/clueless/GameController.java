@@ -1,6 +1,8 @@
 package edu.jhu.clueless;
 
-import java.util.Calendar;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -96,10 +98,13 @@ public class GameController {
 	@RequestMapping(value = "home/getGames")
 	@ResponseBody
 	public String[] getAvailableGames(){
-		// Should only return games that are not full and not started
-		String[] myStrings = {"game1","game2"};
-		// TODO
-		return myStrings;
+		List<String> availableGames = new ArrayList<>();
+		for (Game game : reg.getGames()) {
+			if (!game.isActive() && game.getWinner() == null && game.getPlayers().size() < 6) {
+				availableGames.add(game.getId().toString());
+			}
+		}
+		return availableGames.toArray(new String[availableGames.size()]);
 	}
 	
 	/**
@@ -111,11 +116,9 @@ public class GameController {
 	@RequestMapping(value = "home/createGame") 
 	@ResponseBody
 	public String createGame(@RequestParam(name="id") String id){
-		// TODO - return the games ID
-		// We do not join the player here. They make a separate request
-		// to join to the game as they will need to select a character first
-		
-		return "TODO";
+		Game game = new Game(id, "New game");
+		this.reg.add(game);
+		return game.getId();
 	}
 	
 	/**
@@ -131,8 +134,16 @@ public class GameController {
 	public String joinGame(@RequestParam(name="id") String gameId,
 			@RequestParam(name="suspect") String character,
 			HttpServletRequest request){
-		// TODO - join the game
-		
+		// TODO: handle case that registry returns null
+
+		try {
+			String charNorm = normalizeConstant(normalizeConstant(character));
+			reg.get(gameId).addPlayer(Constants.Suspect.valueOf(charNorm));
+		} catch (CluelessException e) {
+			// TODO: handle exception
+		}
+
+		// TODO: should this player ID be the same as the one in the player object?
 		String playerId = (String)request.getSession()
 				.getAttribute(SESSION_CLIENT_ID);
 		String message = "User " + playerId + " has joined the session.";
@@ -152,7 +163,17 @@ public class GameController {
 	 */
 	@MessageMapping("move") 
 	public void gameMove(ClientAction client){
-		// TODO
+		// TODO: handle case that registry returns null
+		Game game = reg.get(client.getGameId());
+		Player player = game.getPlayer(client.getPlayerId());
+		Point destination = new Point(client.getLocationX(), client.getLocationY());
+
+		try {
+			game.move(player, destination);
+		} catch (CluelessException e) {
+			// TODO: handle exception
+		}
+
 		sendGameMessageAllPlayers(client.getGameId(), "Action Move");
 	}
 	
@@ -162,7 +183,12 @@ public class GameController {
 	 */
 	@MessageMapping("start")
 	public void gameStart(ClientAction client){
-		// TODO
+		try {
+			// TODO: handle case that registry returns null
+			reg.get(client.getGameId()).start();
+		} catch (CluelessException e) {
+			// TODO: handle exception
+		}
 		sendGameMessageAllPlayers(client.getGameId(), "Game has started");
 	}
 	
@@ -172,8 +198,16 @@ public class GameController {
 	 */
 	@MessageMapping("suggest")
 	public void gameSuggest(ClientAction client){
-		// TODO game logic
-		// finally change playerId to the suggest users playerid
+		// TODO: handle case that registry returns null
+		Game game = reg.get(client.getGameId());
+		Player player = game.getPlayer(client.getPlayerId());
+		try {
+			Set<Card> suggestion = buildProposal(client.getCards());
+			game.suggest(player, suggestion);
+		} catch (CluelessException e) {
+			// TODO: Handle exception
+		}
+
 		sendMessageToUser(client.getPlayerId(), client);
 	}
 	
@@ -183,7 +217,25 @@ public class GameController {
 	 */
 	@MessageMapping("respondsuggest")
 	public void gameRespondSuggest(ClientAction client){
-		// TODO
+		// TODO: handle case that registry returns null
+		Game game = reg.get(client.getGameId());
+		Player player = game.getPlayer(client.getPlayerId());
+
+		Set<String> cards = client.getCards();
+		String responseName = null;
+		if (cards.size() != 1) {
+			// TODO: handle invalid input
+		} else {
+			responseName = cards.iterator().next();
+		}
+
+		try {
+			Card response = parseCard(normalizeConstant(responseName));
+			game.respond(player, response);
+		} catch (CluelessException e) {
+			// TODO: Handle exception
+		}
+
 		sendGameMessageAllPlayers(client.getGameId(), client);
 	}
 	
@@ -193,7 +245,18 @@ public class GameController {
 	 */
 	@MessageMapping("accuse")
 	public void gameAccuse(ClientAction client){
-		// TODO
+		// TODO: handle case that registry returns null
+		Game game = reg.get(client.getGameId());
+		Player player = game.getPlayer(client.getPlayerId());
+		try {
+			Set<Card> accusation = buildProposal(client.getCards());
+			game.accuse(player, accusation);
+		} catch (CluelessException e) {
+			// TODO: Handle exception
+		}
+
+		// TODO: Handle end of game
+
 		sendGameMessageAllPlayers(client.getGameId(), client);
 	}
 	
@@ -229,4 +292,61 @@ public class GameController {
 	public void sendMessageToUser(String userId, Object payload){
 		msgTemplate.convertAndSend(GameController.CHANNEL_USER + userId, payload);
 	}
+
+	private static String normalizeConstant(String s) {
+		return s.trim().toUpperCase();
+	}
+
+	private static boolean isOfCardType(Constants.EntityType type, String cardName) {
+		if (type == Constants.EntityType.ROOM) {
+			for (Constants.Room room : Constants.Room.values()) {
+				if (cardName.equals(room.toString())) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		else if (type == Constants.EntityType.WEAPON) {
+			for (Constants.Weapon weapon : Constants.Weapon.values()) {
+				if (cardName.equals(weapon.toString())) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		else {
+			for (Constants.Suspect suspect : Constants.Suspect.values()) {
+				if (cardName.equals(suspect.toString())) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
+	private static Card parseCard(String cardName) throws CluelessException {
+		Card card;
+		if (isOfCardType(Constants.EntityType.ROOM, cardName)) {
+			card = Constants.Room.valueOf(cardName);
+		} else if (isOfCardType(Constants.EntityType.WEAPON, cardName)) {
+			card = Constants.Weapon.valueOf(cardName);
+		} else if (isOfCardType(Constants.EntityType.SUSPECT, cardName)) {
+			card = Constants.Suspect.valueOf(cardName);
+		} else {
+			throw new CluelessException(String.format("Unable to parse proposal=%s into Clue card", cardName));
+		}
+		return card;
+	}
+
+	private static Set<Card> buildProposal(Collection<String> input) throws CluelessException {
+		Set<Card> proposal = new HashSet<>();
+		for (String cardName : input) {
+			String cardNorm = normalizeConstant(cardName);
+			proposal.add(parseCard(cardNorm));
+		}
+		return proposal;
+	}
+
 }

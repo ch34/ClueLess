@@ -6,13 +6,13 @@ import java.util.*;
 
 public class Player implements Comparable<Player> {
 
-	private UUID id;
+	private String id;
 	private Suspect suspect;
 	private Set<Card> cards;
 	private boolean active;
 
 	public Player(Suspect suspect) {
-		this.id = UUID.randomUUID();
+		this.id = UUID.randomUUID().toString();
 		this.suspect = suspect;
 		this.cards = new HashSet<>();
 		active = true;
@@ -48,7 +48,7 @@ public class Player implements Comparable<Player> {
 		return suspect;
 	}
 
-	public UUID getID() {
+	public String getID() {
 		return id;
 	}
 

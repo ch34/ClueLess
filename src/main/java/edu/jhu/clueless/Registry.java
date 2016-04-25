@@ -4,9 +4,9 @@ public interface Registry<T> {
 
 	public T get(String id);
 	
-	public T create(T obj);
-	
-	public T remove(T obj);
+	public void add(T obj);
+
+	public T remove(String id);
 	
 	public int getCount();
 

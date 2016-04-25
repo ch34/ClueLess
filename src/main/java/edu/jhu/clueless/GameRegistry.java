@@ -1,40 +1,40 @@
 package edu.jhu.clueless;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-// TODO Change Registry<GameRegistry> to Registry<Game>
-public class GameRegistry implements Registry<GameRegistry> {
+public class GameRegistry implements Registry<Game> {
 	
 	private static GameRegistry _myInstance = null;
-	private Map<String, String> _games = 
-			new ConcurrentHashMap<String, String>();
+	private Map<String, Game> _games = new ConcurrentHashMap<>();
 	
 	private GameRegistry(){
 		// empty
 	}
 	
 	@Override
-	public GameRegistry get(String id) {
-		// TODO Auto-generated method stub
-		return null;
+	public Game get(String id) {
+		return _games.get(id);
 	}
 
 	@Override
-	public GameRegistry create(GameRegistry obj) {
-		// TODO Auto-generated method stub
-		return null;
+	public void add(Game game) {
+		_games.put(game.getId(), game);
 	}
 
 	@Override
-	public GameRegistry remove(GameRegistry obj) {
-		// TODO Auto-generated method stub
-		return null;
+	public Game remove(String id) {
+		return _games.remove(id);
 	}
 
 	@Override
 	public int getCount() {
 		return _games.size();
+	}
+
+	public Collection<Game> getGames() {
+		return _games.values();
 	}
 
 	
