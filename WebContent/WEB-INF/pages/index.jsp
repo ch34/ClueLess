@@ -24,8 +24,8 @@ var stompClient;
 
 // let the server generate the id
 var playerId = "${clientId}";
-var character = "";   // the suspect the client will be playing
-var gameId = ""; // set after the client successfully joins a game
+var character;   // the suspect the client will be playing
+var gameId; // set after the client successfully joins a game
 
 //This class mimics the JAVA class
 //function names must match those of the Java class
@@ -38,6 +38,7 @@ class ClientAction {
 		this.locationX = 0;
 		this.locationY = 0;
 		this.message = "";
+		this.cards = [];
 	}
 	getAction(){ return this.action; }
 	getPlayerId(){ return this.playerId; }
@@ -47,6 +48,8 @@ class ClientAction {
 	setLocation(x,y){this.locationX = x; this.locationY = y}
 	getMessage(){ return this.message; }
 	setMessage(msg){ this.message = msg; }
+	setCards(cards){ this.cards = cards; }
+	getCars(){ return this.cards; }
 }
 
 //create global client actions which will be reused multiple times
@@ -63,56 +66,6 @@ $(document).ready(this.selectGame);
 </script>
 </head>
 <body>
-<!--
-<div style="float:right;">
-Game Version ${version}<br/>
-PlayerId <span id="currentPlayerId"></span>
-</div>
-
-<table style="width:100%;">
- <tr>
-  <td style="width:50%;">
-    <span id="joiningGame">
-    Available Games <select id="gameList"></select>
-	<button type="button" id="joinGame" onclick="joinGame();">Join Game</button>
-	<button type="button" id="createGame" onclick="createGame();">Create Game</button>
-	</span>
-	<span id="startendGame">
-	<button type="button" id="connect" onclick="startGame();">Start Game</button>
-	<button type="button" id="disconnect" onclick="disconnect();">Leave Game</button>
-	</span>
-	<div id="playerCards" style="display:none"></div>
-
-	<div id="suspects" style="display:none"></div>
-	<div id="weapons" style="display:none"></div>
-	<div id="rooms" style="display:none"></div>
-  </td>
-  <td style="width:50%;">
-   Game Board Layout here <br/>
-   <div id="toolbar" class="ui-widget-header ui-corner-all">
-    <span id="buttonsMove">
-     <button id="moveLeft" onclick='actionMove("Left");'></button>
-     <button id="moveRight" onclick='actionMove("Right");'></button>
-     <button id="moveUp" onclick='actionMove("Up");'></button>
-  	 <button id="moveDown" onclick='actionMove("Down");'></button>
-  	</span>
-  	<button id="suggest" onclick="actionSuggest();">Suggest</button>
-  	<button id="respond" onclick="actionRespondSuggest();">Respond</button>
-  	<button id="accuse" onclick="actionAccuse();">Accuse</button>
-   </div>
-  </td>
- </tr>
- <tr>
-  <td colspan="2" style="width:100%;">
-   <div id="conversationDiv" style="margin-left:5px;">
- 	<textarea id="response" rows="5" cols="60"></textarea><br/>
- 	<input type="text" size="50" id="message" name="message">
- 	<button type="button" id="send" onclick="sendChat();">Send Chat</button>
-   </div>
-  </td>
- </tr>
-</table>
--->
 <div class="container">
 	<header>
 		<div class="title">
@@ -128,7 +81,7 @@ PlayerId <span id="currentPlayerId"></span>
 			<div id="chatArea">
 				<textarea id="response" readonly></textarea>
 				  <div id="chatInput"> 
-					<input type="text" id="chatMessage"/><button type="button" onclick="sendChat();">Send</button>
+					<input type="text" id="chatMessage" onkeyup="sendChatKeyPress(event,this);"/><button type="button" id="messageBtn" onclick="sendChat();">Send</button>
 				  </div>
 			</div>
 		</div>
@@ -139,10 +92,8 @@ PlayerId <span id="currentPlayerId"></span>
 				<button type="button" id="joinGame" onclick="joinGame();">Join Game</button>
 				<button type="button" id="createGame" onclick="createGame();">Create Game</button>
 			  </span>
-			  <span id="startendGame">
-				<button type="button" id="connect" onclick="startGame();">Start Game</button>
-				<button type="button" id="disconnect" onclick="disconnect();">Leave Game</button>
-			  </span>
+			  <button type="button" id="connect" onclick="startGame();">Start Game</button>
+			  <button type="button" id="disconnect" onclick="disconnect();">Leave Game</button>
 		    </div>
 			<div class="gameBoard">
 			  <h2>Welcome to ClueLess</h2>
@@ -159,40 +110,47 @@ PlayerId <span id="currentPlayerId"></span>
   				<button id="accuse" onclick="actionAccuse();">Accuse</button>
    			  </div>
 			</div>
-			<div class="gameCards">
-				<p>Game Cards Here. Players can select Room,Suspect, or Weapon. 
-				This section and options should only be shown depending on the action requested by the player
-				</p>
+			<div class="gameCards" id="gameCards">
+				<p>Select your Card(s)</p>
+				<span id="characterCards">
 				Characters 
 				<select id="characters" name="characters">
-					<option value="Miss Scarlet">Miss Scarlet</option>
-					<option value="Mrs. Peacock">Mrs. Peacock</option>
-					<option value="Mrs. White">Mrs. White</option>
-					<option value="Professor Plum">Professor Plum</option>
-					<option value="Colonel Mustard">Colonel Mustard</option>
-					<option value="Mr. Green">Mr. Green</option>
+					<option value="MISS_SCARLET">Miss Scarlet</option>
+					<option value="MRS_PEACOCK">Mrs. Peacock</option>
+					<option value="MRS_WHITE">Mrs. White</option>
+					<option value="PROFESSOR_PLUM">Professor Plum</option>
+					<option value="COLONEL_MUSTARD">Colonel Mustard</option>
+					<option value="MR_GREEN">Mr. Green</option>
 				</select>
+				</span>
+				<span id="roomCards">
 				Rooms 
 				<select id="rooms" name="rooms">
-					<option value="Kitchen">Kitchen</option>
-					<option value="Study">Study</option>
-					<option value="Conservatory">Conservatory</option>
-					<option value="Dining Room">Dining Room</option>
-					<option value="Billiard Room">Billiard Room</option>
-					<option value="Ballroom">Ballroom</option>
-					<option value="Lounge">Lounge</option>
-					<option value="Hall">Hall</option>
-					<option value="Library">Library</option>
+					<option value="KITCHEN">Kitchen</option>
+					<option value="STUDY">Study</option>
+					<option value="CONSERVATORY">Conservatory</option>
+					<option value="DINING_ROOM">Dining Room</option>
+					<option value="BILLIARD_ROOM">Billiard Room</option>
+					<option value="BALLROOM">Ballroom</option>
+					<option value="LOUNGE">Lounge</option>
+					<option value="HALL">Hall</option>
+					<option value="LIBRARY">Library</option>
 				</select>
+				</span>
+				<span id="weaponCards">
 				Weapons 
 				<select id="weapons" name="weapons">
-					<option value="Candlestick">Candlestick</option>
-					<option value="Rope">Rope</option>
-					<option value="Knife">Knife</option>
-					<option value="Lead Pipe">Lead Pipe</option>
-					<option value="Wrench">Wrench</option>
-					<option value="Pistol">Pistol</option>
+					<option value="CANDLESTICK">Candlestick</option>
+					<option value="ROPE">Rope</option>
+					<option value="KNIFE">Knife</option>
+					<option value="LEAD_PIPE">Lead Pipe</option>
+					<option value="WRENCH">Wrench</option>
+					<option value="PISTOL">Pistol</option>
 				</select>
+				</span>
+				<button id="charactersBtn" type="button" onclick="selectCharacter();">OK</button>
+				<button id="accuseBtn" type="button">OK</button>
+				<button id="suggestBtn" type="button">OK</button>
 			</div>
 			<div class="playerHand">
 				<p>Players Hand here. Shows the player what cards they have</p>
@@ -236,6 +194,7 @@ $(function() {
 });
 
 $("#currentPlayerId").append(playerId);
+startup();
 </script>
 
 </body>

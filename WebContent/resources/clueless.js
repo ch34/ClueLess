@@ -1,4 +1,19 @@
+/**
+ * Disables / hides selections on load of the page
+ */
+function startup(){
+	hidGameCardSelection();
+	// disable the chat feature on load
+	$("#chatMessage").prop("disabled",true);
+	$("#messageBtn").prop("disabled",true);
+	$("#connect").hide();
+	$("#disconnect").hide();
+}
 
+/**
+ * 
+ * @param myGameId
+ */
 function connect(myGameId) {
     if ('WebSocket' in window){
     	var url = "ws://localhost:8080/clueless/stomp";
@@ -18,6 +33,11 @@ function connect(myGameId) {
 			stompClient.subscribe('/queue/user-'+playerId, function(frame3) {
 				parseUserMessage(frame3.body);
 			});
+			
+			// enable the chat feature
+			$("#chatMessage").prop("disabled",false);
+			$("#messageBtn").prop("disabled",false);
+			
 		}, function(errorFrame) {
 			// error callback
 			if (errorFrame && errorFrame.headers){
@@ -35,12 +55,23 @@ function connect(myGameId) {
  * disconnects player from the game
  */
 function disconnect() {
-	$("#startendGame").hide();
 	$("#joiningGame").show();
+	gameId = null; // clear gameId
+	character = null; // clear character
+	//disable chat
+	$("#chatMessage").prop("disabled",true);
+	$("#messageBtn").prop("disabled",true);
+	// hide game start/leave actions
+	$("#connect").hide();
+	$("#disconnect").hide();
 	
  	if (stompClient){
  		stompClient.disconnect();
  	}
+ 	
+ 	// now make a call to selectGame to load
+ 	// all available games again
+ 	selectGame();
 }
 
 /**
@@ -49,6 +80,19 @@ function disconnect() {
 function sendChat() {
     clientChatAction.setMessage( $("#chatMessage").val() );
     sendAction(clientChatAction);
+    // now clear the typing area
+    $("#chatMessage").val("");
+}
+
+/**
+ * 
+ * @param event
+ */
+function sendChatKeyPress(event){
+	var chCode = event.keyCode;
+	if ( chCode === 13 ){ // Enter Key
+		sendChat();
+	}
 }
 
 /**
@@ -92,9 +136,11 @@ function actionRespondSuggest(){
  * Selects a character pawn for the player
  */
 function selectCharacter(){
-	// TODO
-	// charater = selectSuspect();
-	window.console.log("TODO");
+	var myCharacter = $("#characters").val();
+	if (myCharacter){
+		character = myCharacter;
+		hidGameCardSelection();
+	}
 }
 
 /**
@@ -136,6 +182,8 @@ function selectGame(){
 				var current = "<option value=" +item + ">" + item + "</option>";
 				$("#gameList").append(current);
 			});
+			hidGameCardSelection();
+			showCharacterSelection();
 		},
 		error: function(result){
 			alert("Failed to retrieve game list");
@@ -149,8 +197,24 @@ function selectGame(){
 function createGame(){
 	// TODO
 	// make Ajax call to create game
-	// if success then call join automatically
-	// joinGame(myGameId);
+	// if success then show characters for the user to select
+	$.ajax({
+		url: "home/createGame", 
+		success: function(result){
+			// result should just be a string, gameId
+			gameId = result;
+			// show characters for selection
+			showCharacterSelection();
+			// make a call to getAvailableGames which will
+			// load the newly created game
+			selectGame();
+			// now set the Available games to the gameId
+			//$("#gameList").val(gameId);
+		},
+		error: function(result){
+			updateChatArea(result);
+		}
+	});
 	window.console.log("TODO");
 }
 
@@ -158,41 +222,41 @@ function createGame(){
  * Joins a player to a game. If not gameid is passed in
  * it looks for a selected game in the available games list
  */
-function joinGame(myGameId){
-	// TODO - uncomment once selectCharacter has been implemented
-//	if( !character ){
-//		updateChatArea("Sorry, please select a character first.");
-//		return;
-//	}
-//	alert("Player should select a character pawn first");
-	character = "Miss Scarlett";
-	
-	if( myGameId ){
-		gameId = myGameId;
-	} else {
-		gameId = $("#gameList").val();
+function joinGame(){
+	if( !character ){
+		updateChatArea("Sorry, please select a character first.");
+		return;
 	}
 	
-	window.console.log("Joining Game " + gameId);
+	if( null == gameId || gameId == "" ){
+		gameId = $("#gameList").val();
+	  // double check to make sure the selection list was not empty
+	  if ( null == gameId || gameId == ""){
+		updateChatArea("Sorry, please create a game first");
+		return;
+	  }
+	}
 	$.ajax({
 		url:'home/joinGame?id='+gameId+"&suspect="+character,
 		success: function(result){
-			if(result == "success"){
-				connect(gameId);
-				$("#startendGame").show();
-				$("#joiningGame").hide();
-				// update the global actions for gameId
-				clientMoveAction.setGameId(gameId);
-				clientAccuseAction.setGameId(gameId);
-				clientRespondAction.setGameId(gameId);
-				clientSuggestAction.setGameId(gameId);
-				clientChatAction.setGameId(gameId);
-			} else {
-				updateChatArea("Sorry, unable to join game: " + result);
-			}
+			// result should be the gameId but could be anything
+			// we really don't care as once we enter here the 
+			// client has successfully joined on the server side
+			connect(gameId);
+			$("#connect").show();
+			$("#disconnect").show();
+			$("#joiningGame").hide();
+			// update the global actions for gameId
+			clientMoveAction.setGameId(gameId);
+			clientAccuseAction.setGameId(gameId);
+			clientRespondAction.setGameId(gameId);
+			clientSuggestAction.setGameId(gameId);
+			clientChatAction.setGameId(gameId);
 		},
 		error: function(result){
-			alert("Sorry, unable to access the game");
+			// show character selection again ??
+			showCharacterSelection();
+			updateChatArea(result);
 		}
 	});
 }
@@ -204,6 +268,47 @@ function startGame(){
 	var startAction = new ClientAction("start");
 	startAction.setGameId(gameId);
 	sendAction(startAction);
+	$("#connect").hide();
+}
+
+/**
+ * 
+ */
+function showCharacterSelection(){
+	$("#gameCards").show(); // show main section
+	$("#characterCards").show();
+	$("#charactersBtn").show();
+}
+
+/**
+ * 
+ */
+function showAccuesSelection(){
+	$("#gameCards").show(); // show main section
+	$("#characterCars").show();
+	$("#roomCards").show();
+	$("#weaponCards").show();
+	$("#accuseBtn").show();
+}
+
+function showSuggestSelection(){
+	// we don't need to show a room because
+	// the player must be in a room to make a suggestion
+	// so just grab the room he is in instead of showing it
+	$("#gameCards").show(); // show main section
+	$("#characterCards").show();
+	$("#weaponCards").show();
+	$("#accuseBtn").show();
+}
+
+/**
+ * 
+ */
+function hidGameCardSelection(){
+	// we hide all elements so when others need to show
+	// only the options they need will be shown
+	$("#gameCards").children().hide();
+	$("#gameCards").hide();
 }
 
 /**
