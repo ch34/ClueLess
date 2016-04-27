@@ -162,7 +162,26 @@ public class Game {
 	/**
 	 * Add new player to the game, if the given suspect is available and game is not active.
 	 * @param suspect Suspect to associate with the new player.
-	 * @return Id of the new player, or null if the player could not be added.
+	 * @throws CluelessException if the player could not be added
+	 */
+	public void addPlayer(String id, Suspect suspect) throws CluelessException {
+		if (active.get()) {
+			throw new CluelessException("Game already started");
+		}
+
+		Player newPlayer = new Player(id, suspect);
+		Player existingPlayer = players.putIfAbsent(suspect, newPlayer);
+
+		if (existingPlayer != null) {
+			throw new CluelessException("The requested suspect is already taken");
+		}
+	}
+
+	/**
+	 * Add new player to the game, if the given suspect is available and game is not active.
+	 * @param suspect Suspect to associate with the new player.
+	 * @return Id of the added player
+	 * @throws CluelessException if the player could not be added
 	 */
 	public String addPlayer(Suspect suspect) throws CluelessException {
 		if (active.get()) {

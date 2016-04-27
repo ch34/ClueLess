@@ -7,6 +7,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import static com.sun.tools.doclint.Entity.ne;
 
 /**
  * The client will subscribe to minimum of three channels.
@@ -38,7 +42,6 @@ public class GameController {
 	/* 
 	 * Channels 
 	 */
-	public static final String CHANNEL_CHAT = "/queue/chat";
 	/* User subscribes to /queue/game-{gameId} */
 	public static final String CHANNEL_GAME = "/queue/game-";
 	/* User subscribes to /queue/user-{userId} */
@@ -69,7 +72,7 @@ public class GameController {
 	public String getGamePage(HttpServletRequest request){
 		// Generate the players id add add it to their session
 		// This is needed for tracking users connected/disconnected
-		String playerId = Calendar.getInstance().getTimeInMillis() + "";
+		String playerId = UUID.randomUUID().toString();
 		request.getSession().setAttribute(SESSION_CLIENT_ID, playerId);
 		request.getSession().setAttribute(SESSION_VERSION_ID, version_);
 		
@@ -101,7 +104,7 @@ public class GameController {
 		List<String> availableGames = new ArrayList<>();
 		for (Game game : reg.getGames()) {
 			if (!game.isActive() && game.getWinner() == null && game.getPlayers().size() < 6) {
-				availableGames.add(game.getId().toString());
+				availableGames.add(game.getId());
 			}
 		}
 		return availableGames.toArray(new String[availableGames.size()]);
@@ -115,10 +118,14 @@ public class GameController {
 	 */
 	@RequestMapping(value = "home/createGame") 
 	@ResponseBody
-	public String createGame(@RequestParam(name="id") String id){
-		Game game = new Game(id, "New game");
+	public ResponseEntity<String> createGame(@RequestParam(name="id", required = false) String id){
+		if (id != null && reg.get(id) != null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					String.format("Game with ID=%s already exists", id));
+		}
+		Game game = id == null ? new Game("New game") : new Game(id, "New game");
 		this.reg.add(game);
-		return game.getId();
+		return ResponseEntity.ok(game.getId());
 	}
 	
 	/**
@@ -129,30 +136,38 @@ public class GameController {
 	 * @param request HttpServletRequest for setting session data
 	 * @return
 	 */
-	@RequestMapping("home/joinGame") 
+	@RequestMapping("home/joinGame")
 	@ResponseBody
-	public String joinGame(@RequestParam(name="id") String gameId,
-			@RequestParam(name="suspect") String character,
-			HttpServletRequest request){
-		// TODO: handle case that registry returns null
+	public ResponseEntity<String> joinGame(@RequestParam(name="id") String gameId,
+										   @RequestParam(name="suspect") String character,
+										   HttpServletRequest request){
+		String playerId = (String) request.getSession().getAttribute(SESSION_CLIENT_ID);
 
-		try {
-			String charNorm = normalizeConstant(normalizeConstant(character));
-			reg.get(gameId).addPlayer(Constants.Suspect.valueOf(charNorm));
-		} catch (CluelessException e) {
-			// TODO: handle exception
+		Game game = reg.get(gameId);
+		if (game == null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid game ID");
 		}
 
-		// TODO: should this player ID be the same as the one in the player object?
-		String playerId = (String)request.getSession()
-				.getAttribute(SESSION_CLIENT_ID);
-		String message = "User " + playerId + " has joined the session.";
-		sendGameMessageAllPlayers(GameController.CHANNEL_GAME + gameId, message);
+		try {
+			String charNorm = normalizeConstant(character);
+			game.addPlayer(playerId, Constants.Suspect.valueOf(charNorm));
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Unknown character=" + character);
+		} catch (CluelessException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		}
+
+		String message = getDisplayCharFromPlayer(game, playerId) + " has joined the session.";
+		sendGameMessageAllPlayers(gameId, message);
 		
 		// lastly - add the gameid to the players session only
 		// if joining game succeeded
 		request.getSession().setAttribute("gameId", gameId);
-		return "success";
+		return ResponseEntity.ok(gameId);
+	}
+
+	private String getDisplayCharFromPlayer(Game game, String playerId) {
+		return game.getPlayer(playerId).getSuspect().toString().toLowerCase();
 	}
 
 //### Methods Called Via WebSocket ###//	
@@ -163,18 +178,26 @@ public class GameController {
 	 */
 	@MessageMapping("move") 
 	public void gameMove(ClientAction client){
-		// TODO: handle case that registry returns null
-		Game game = reg.get(client.getGameId());
-		Player player = game.getPlayer(client.getPlayerId());
+		String playerId = client.getPlayerId();
+		String gameId = client.getGameId();
+
+		Game game = reg.get(gameId);
+		if (game == null) {
+			sendMessageToUser(playerId, "Invalid game ID");
+			return;
+		}
+
+		Player player = game.getPlayer(playerId);
 		Point destination = new Point(client.getLocationX(), client.getLocationY());
 
 		try {
 			game.move(player, destination);
 		} catch (CluelessException e) {
-			// TODO: handle exception
+			sendMessageToUser(playerId, e.getMessage());
+			return;
 		}
 
-		sendGameMessageAllPlayers(client.getGameId(), "Action Move");
+		sendGameMessageAllPlayers(gameId, client);
 	}
 	
 	/**
@@ -183,13 +206,23 @@ public class GameController {
 	 */
 	@MessageMapping("start")
 	public void gameStart(ClientAction client){
-		try {
-			// TODO: handle case that registry returns null
-			reg.get(client.getGameId()).start();
-		} catch (CluelessException e) {
-			// TODO: handle exception
+		String playerId = client.getPlayerId();
+		String gameId = client.getGameId();
+
+		Game game = reg.get(gameId);
+		if (game == null) {
+			sendMessageToUser(playerId, "Invalid game ID");
+			return;
 		}
-		sendGameMessageAllPlayers(client.getGameId(), "Game has started");
+
+		try {
+			game.start();
+		} catch (CluelessException e) {
+			sendMessageToUser(playerId, e.getMessage());
+			return;
+		}
+
+		sendGameMessageAllPlayers(gameId, "Game has started");
 	}
 	
 	/**
@@ -198,14 +231,22 @@ public class GameController {
 	 */
 	@MessageMapping("suggest")
 	public void gameSuggest(ClientAction client){
-		// TODO: handle case that registry returns null
-		Game game = reg.get(client.getGameId());
+		String playerId = client.getPlayerId();
+		String gameId = client.getGameId();
+
+		Game game = reg.get(gameId);
+		if (game == null) {
+			sendMessageToUser(playerId, "Invalid game ID");
+			return;
+		}
+
 		Player player = game.getPlayer(client.getPlayerId());
 		try {
 			Set<Card> suggestion = buildProposal(client.getCards());
 			game.suggest(player, suggestion);
 		} catch (CluelessException e) {
-			// TODO: Handle exception
+			sendMessageToUser(playerId, e.getMessage());
+			return;
 		}
 
 		sendMessageToUser(client.getPlayerId(), client);
@@ -217,14 +258,22 @@ public class GameController {
 	 */
 	@MessageMapping("respondsuggest")
 	public void gameRespondSuggest(ClientAction client){
-		// TODO: handle case that registry returns null
-		Game game = reg.get(client.getGameId());
+		String playerId = client.getPlayerId();
+		String gameId = client.getGameId();
+
+		Game game = reg.get(gameId);
+		if (game == null) {
+			sendMessageToUser(playerId, "Invalid game ID");
+			return;
+		}
+
 		Player player = game.getPlayer(client.getPlayerId());
 
 		Set<String> cards = client.getCards();
-		String responseName = null;
+		String responseName;
 		if (cards.size() != 1) {
-			// TODO: handle invalid input
+			sendMessageToUser(playerId, "Invalid response: must include only a single card");
+			return;
 		} else {
 			responseName = cards.iterator().next();
 		}
@@ -233,7 +282,8 @@ public class GameController {
 			Card response = parseCard(normalizeConstant(responseName));
 			game.respond(player, response);
 		} catch (CluelessException e) {
-			// TODO: Handle exception
+			sendMessageToUser(playerId, e.getMessage());
+			return;
 		}
 
 		sendGameMessageAllPlayers(client.getGameId(), client);
@@ -245,19 +295,36 @@ public class GameController {
 	 */
 	@MessageMapping("accuse")
 	public void gameAccuse(ClientAction client){
-		// TODO: handle case that registry returns null
-		Game game = reg.get(client.getGameId());
-		Player player = game.getPlayer(client.getPlayerId());
-		try {
-			Set<Card> accusation = buildProposal(client.getCards());
-			game.accuse(player, accusation);
-		} catch (CluelessException e) {
-			// TODO: Handle exception
+		String playerId = client.getPlayerId();
+		String gameId = client.getGameId();
+
+		Game game = reg.get(gameId);
+		if (game == null) {
+			sendMessageToUser(playerId, "Invalid game ID");
+			return;
 		}
 
-		// TODO: Handle end of game
+		Player player = game.getPlayer(client.getPlayerId());
+		boolean gameWon;
+		try {
+			Set<Card> accusation = buildProposal(client.getCards());
+			gameWon = game.accuse(player, accusation);
+		} catch (CluelessException e) {
+			sendMessageToUser(playerId, e.getMessage());
+			return;
+		}
 
-		sendGameMessageAllPlayers(client.getGameId(), client);
+		if (gameWon) {
+			sendGameMessageAllPlayers(client.getGameId(), client);
+			reg.remove(gameId);
+		} else {
+			String playerChar = getDisplayCharFromPlayer(game, playerId);
+			sendGameMessageAllPlayers(client.getGameId(), playerChar + " has made an incorrect accusation and has lost the game.");
+			if (!game.isActive()) {
+				sendGameMessageAllPlayers(client.getGameId(), "No players left in the game. Game over");
+				reg.remove(gameId);
+			}
+ 		}
 	}
 	
 	/**
@@ -266,10 +333,19 @@ public class GameController {
 	 */
 	@MessageMapping("chat")
 	public void gameChat(ClientAction client){
+		String playerId = client.getPlayerId();
+		String gameId = client.getGameId();
+
+		Game game = reg.get(gameId);
+		if (game == null) {
+			sendMessageToUser(playerId, "Invalid game ID");
+			return;
+		}
+
 		// only send to clients of the connected game
 		// just reiterate the message while updating who sent it
 		String msg = client.getMessage();
-		client.setMessage("Player " + client.getPlayerId() + ": " + msg);
+		client.setMessage(getDisplayCharFromPlayer(game, playerId) + ": " + msg);
 		sendGameMessageAllPlayers(client.getGameId(), client);
 	}
 	
@@ -335,7 +411,7 @@ public class GameController {
 		} else if (isOfCardType(Constants.EntityType.SUSPECT, cardName)) {
 			card = Constants.Suspect.valueOf(cardName);
 		} else {
-			throw new CluelessException(String.format("Unable to parse proposal=%s into Clue card", cardName));
+			throw new CluelessException(String.format("Unable to parse card=%s into Clue card", cardName));
 		}
 		return card;
 	}

@@ -12,7 +12,11 @@ public class Player implements Comparable<Player> {
 	private boolean active;
 
 	public Player(Suspect suspect) {
-		this.id = UUID.randomUUID().toString();
+		this(UUID.randomUUID().toString(), suspect);
+	}
+
+	public Player(String id, Suspect suspect) {
+		this.id = id;
 		this.suspect = suspect;
 		this.cards = new HashSet<>();
 		active = true;

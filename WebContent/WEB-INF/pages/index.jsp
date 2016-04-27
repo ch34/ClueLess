@@ -4,7 +4,7 @@
 
 <html>
 <head>
-<title>WebSocket Test</title>
+<title>ClueLess</title>
 <script src="resources/stomp.min.js"></script>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
 <link rel="stylesheet" href="resources/clueless.css">
