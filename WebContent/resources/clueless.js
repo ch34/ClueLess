@@ -16,7 +16,15 @@ function startup(){
  */
 function connect(myGameId) {
     if ('WebSocket' in window){
-    	var url = "ws://localhost:8080/clueless/stomp";
+    	var protocol = "ws://";
+    	var hostname = window.location.hostname;
+    	var port = window.location.port;
+    	var path = "/clueless/stomp";
+    	var url = protocol + hostname;
+    	if (port && port != 0 && port != ""){
+    		url = url + ":" + port;
+    	}
+    	url = url + path;
 		stompClient = Stomp.client(url);
 		
 		// connect via websocket. username/password are
