@@ -264,7 +264,7 @@ function joinGame(){
 		error: function(result){
 			// show character selection again ??
 			showCharacterSelection();
-			updateChatArea(result);
+			updateChatArea(result.responseText);
 		}
 	});
 }
@@ -332,6 +332,9 @@ function updateSuspectPawns(){
  * @param msg message to display
  */
 function updateChatArea(msg){
+	var time = new Date();
+	var timePrefix = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+	msg = timePrefix + ' ' + msg;
 	var current = $("#response").val();
 	$("#response").val(msg + "\n" + current);
 }
@@ -341,26 +344,18 @@ function updateChatArea(msg){
 responseActionMap = {};
 responseActionMap.move = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.suggest = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.accuse = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.respondsuggest = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.chat = function(msg){
@@ -371,8 +366,6 @@ responseActionMap.start = function(msg){
 	// TODO
 	// disable un-needed fields
 	// notify player game has started
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.location = function(msg){
@@ -380,8 +373,11 @@ responseActionMap.location = function(msg){
 	// get players locations from msg
 	// to start just notify via chat where the players are
 	// To finish, update the pawns on the game board
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
+}
+
+responseActionMap.set_hand = function(msg){
+	console.log('==========');
+	console.log(msg);
 }
 
 /**

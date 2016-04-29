@@ -48,6 +48,14 @@ public class Player implements Comparable<Player> {
 		return Collections.unmodifiableSet(cards);
 	}
 
+	public Set<String> getCardNames() {
+		Set<String> cardNames = new HashSet<>();
+		for (Card card : cards) {
+			cardNames.add(card.toString());
+		}
+		return cardNames;
+	}
+
 	public Suspect getSuspect() {
 		return suspect;
 	}

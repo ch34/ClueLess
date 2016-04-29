@@ -12,6 +12,15 @@ import java.util.Set;
  * @date Apr 7, 2016
  */
 public class ClientAction {
+
+	public static final String ACTION_SUGGEST = "suggest";
+	public static final String ACTION_RESPOND = "respondsuggest";
+	public static final String ACTION_MOVE = "move";
+	public static final String ACTION_ACCUSE = "accuse";
+	public static final String ACTION_CHAT = "chat";
+	public static final String HAND_UPDATE = "set_hand";
+
+	private String _mySuspect;
 	private String _myAction;
 	private String _myPlayerId;
 	private String _myGameId;
@@ -57,7 +66,7 @@ public class ClientAction {
 	public void setCards(Set<String> cards) {
 		this.cards = cards;
 	}
-	
+
 	public void addCard(String card){
 		this.cards.add(card);
 	}
@@ -84,5 +93,13 @@ public class ClientAction {
 
 	public void setLocationY(int locationY) {
 		this.location_y = locationY;
+	}
+
+	public void setSuspect(String suspect) {
+		this._mySuspect = suspect;
+	}
+
+	public String getSuspect() {
+		return _mySuspect;
 	}
 }
