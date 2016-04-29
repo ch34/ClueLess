@@ -73,6 +73,11 @@ function disconnect() {
 	// hide game start/leave actions
 	$("#connect").hide();
 	$("#disconnect").hide();
+	// hide gameInfo section
+	$("#gameInfo").hide();
+	$("#selectedSuspect").html("");
+	$("#currentGameId").html("");
+	$("#gameInfo").hide();
 	
  	if (stompClient){
  		stompClient.disconnect();
@@ -187,7 +192,7 @@ function getClientsRoomName(locx, locy){
 		var obj = myRooms[room];
 		if(obj.x == locx && obj.y == locy){
 			clientRoom = obj.name;
-			console.log("clients room is " + clientRoom);
+			window.console.log("clients room is " + clientRoom);
 		}
 	}
 	
@@ -428,6 +433,28 @@ function updateChatArea(msg){
 	$("#response").val(msg + "\n" + current);
 }
 
+/**
+ * Draws the users cards on the page
+ * @param cards as array
+ * @returns
+ */
+function showPlayersCards(cards){
+	// we start by making sure the area is clear
+	$("#playerHand").empty();
+	
+	cards.forEach(function(card,index){
+		var newCard = "<div class=\"card " + card + "\"><div>";
+		$("#playerHand").append(newCard);
+	});
+	
+//	for( var card in cards){
+		// <div class="card MRS_WHITE"></div>
+//		var newCard = "<div class=\"card " + card + "\"><div>";
+//		$("#playerHand").append(newCard);
+//	}
+	
+}
+
 // Map of functions called upon Server Response
 // These functions expect a clientAction object as their parameter
 responseActionMap = {};
@@ -462,8 +489,9 @@ responseActionMap.location = function(msg){
 
 responseActionMap.set_hand = function(msg){
 	$("#connect").hide();
-	console.log('==========');
-	console.log(msg);
+	// so we can verify the data
+	window.console.log(msg);
+	showPlayersCards(msg.cards);
 }
 
 /**

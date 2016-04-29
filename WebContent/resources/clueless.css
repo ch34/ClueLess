@@ -179,3 +179,18 @@ footer p{
 	background-image: url("images/cards/weapons/pistol_card_small.png");
 }
 
+.card.CARD_BACK {
+	background-image: url("images/cards/card_back_small.png");
+}
+.cardquarter {
+	
+}
+.cardquarter.CARD_BACK {
+	background-image: url("images/cards/card_back_small.png");
+}
+.CASE_FILE{
+	background-image: url("images/etc/case_file_small.png");
+}
+.notes {
+	background-image: url("images/etc/detective_notes_small.png");
+}

@@ -77,11 +77,10 @@ $(document).ready(this.selectGame);
 			<h1>ClueLess</h1>
 		</div>
 		<div class="subTitle">
-			Game Version ${version}<br/>
 			Player ID: <span id="currentPlayerId"></span>
 			<div id="gameInfo">
-				Selected Suspect: <span id="selectedSuspect"></span><br/>
-				Current Game: <span id="currentGameId"></span>
+				Current Game: <span id="currentGameId"></span><br/>
+				My Character: <span id="selectedSuspect"></span>
 			</div>
 		</div>
 	</header>
@@ -162,13 +161,16 @@ $(document).ready(this.selectGame);
 				<button id="accuseBtn" type="button" onclick="actionAccuse();">OK</button>
 				<button id="suggestBtn" type="button" onclick="actionSuggest();">OK</button>
 			</div>
-			<div class="playerHand">
-				<p>Players Hand here. Shows the player what cards they have</p>
-			</div>
+			<div class="playerHand" id="playerHand"></div>
 		</div>
 	</div>
 	<footer>
-		<p>Footer contents here if any</p>
+	    <p>
+		Team Centurions <br/>
+		Foundation of Software Engineering<br/>
+ 		(EN.605.401.91.SP16)<br/>
+ 		Game Version ${version}
+ 		</p>
 	</footer>
 </div>
 
