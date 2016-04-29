@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import static com.sun.tools.doclint.Entity.ne;
-
 /**
  * The client will subscribe to minimum of three channels.
  * 1) user channel where messages are sent only to them
