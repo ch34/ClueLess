@@ -8,6 +8,7 @@ function startup(){
 	$("#messageBtn").prop("disabled",true);
 	$("#connect").hide();
 	$("#disconnect").hide();
+	$("#gameInfo").hide();
 }
 
 /**
@@ -194,11 +195,13 @@ function getClientsRoomName(locx, locy){
 }
 
 function actionAccuse(){
-	// TODO
-	// selectRoom();
-	// selectSuspect()
-	// selectWeapon()
+	var cards = [];
+	cards.push( selectSuspect() );
+	cards.push( selectWeapon() );
+	cards.push( selectRoom() );
+	clientAccuseAction.setCards(cards);
 	sendAction(clientAccuseAction);
+	hidGameCardSelection();
 }
 
 function actionEndTurn(){
@@ -329,6 +332,10 @@ function joinGame(){
 			clientSuggestAction.setGameId(gameId);
 			clientChatAction.setGameId(gameId);
 			clientEndTurnAction.setGameId(gameId);
+
+			$("#selectedSuspect").append(character);
+			$("#currentGameId").append(gameId);
+			$("#gameInfo").show();
 		},
 		error: function(result){
 			// show character selection again ??
@@ -345,7 +352,6 @@ function startGame(){
 	var startAction = new ClientAction("start");
 	startAction.setGameId(gameId);
 	sendAction(startAction);
-	$("#connect").hide();
 }
 
 /**
@@ -379,6 +385,17 @@ function showSuggestSelection(){
 	$("#characterCards").show();
 	$("#weaponCards").show();
 	$("#suggestBtn").show();
+}
+
+/**
+ *
+ */
+function showAccuseSelection(){
+	$("#gameCards").show(); // show main section
+	$("#characterCards").show();
+	$("#weaponCards").show();
+	$("#roomCards").show();
+	$("#accuseBtn").show();
 }
 
 /**
@@ -418,10 +435,6 @@ responseActionMap.move = function(msg){
 	// TODO do something with the response
 }
 
-responseActionMap.suggest = function(msg){
-	// TODO do something with the response
-}
-
 responseActionMap.accuse = function(msg){
 	// TODO do something with the response
 }
@@ -448,6 +461,7 @@ responseActionMap.location = function(msg){
 }
 
 responseActionMap.set_hand = function(msg){
+	$("#connect").hide();
 	console.log('==========');
 	console.log(msg);
 }

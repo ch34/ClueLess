@@ -78,7 +78,11 @@ $(document).ready(this.selectGame);
 		</div>
 		<div class="subTitle">
 			Game Version ${version}<br/>
-			Player ID <span id="currentPlayerId"></span>
+			Player ID: <span id="currentPlayerId"></span>
+			<div id="gameInfo">
+				Selected Suspect: <span id="selectedSuspect"></span><br/>
+				Current Game: <span id="currentGameId"></span>
+			</div>
 		</div>
 	</header>
 	<div class="clearfix">
@@ -112,7 +116,7 @@ $(document).ready(this.selectGame);
   				</span>
   				<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
   				<button id="respond" onclick="actionRespondSuggest();">Respond</button>
-  				<button id="accuse" onclick="actionAccuse();">Accuse</button>
+  				<button id="accuse" onclick="showAccuseSelection();">Accuse</button>
 				  <button id="endTurn" onclick="actionEndTurn();">End turn</button>
    			  </div>
 			</div>
@@ -155,7 +159,7 @@ $(document).ready(this.selectGame);
 				</select>
 				</span>
 				<button id="charactersBtn" type="button" onclick="selectCharacter();">OK</button>
-				<button id="accuseBtn" type="button">OK</button>
+				<button id="accuseBtn" type="button" onclick="actionAccuse();">OK</button>
 				<button id="suggestBtn" type="button" onclick="actionSuggest();">OK</button>
 			</div>
 			<div class="playerHand">

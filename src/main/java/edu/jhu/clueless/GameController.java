@@ -343,9 +343,9 @@ public class GameController {
 			reg.remove(gameId);
 		} else {
 			String playerChar = getDisplayCharFromPlayer(game, playerId);
-			sendGameMessageAllPlayers(client.getGameId(), playerChar + " has made an incorrect accusation and has lost the game.");
+			sendGameMessageAllPlayers(client.getGameId(), playerChar + " has made an incorrect accusation and can no longer win");
 			if (!game.isActive()) {
-				sendGameMessageAllPlayers(client.getGameId(), "No players left in the game. Game over");
+				sendGameMessageAllPlayers(client.getGameId(), "No players left in the game - Game over");
 				reg.remove(gameId);
 			}
  		}
