@@ -19,6 +19,7 @@ public class ClientAction {
 	public static final String ACTION_ACCUSE = "accuse";
 	public static final String ACTION_CHAT = "chat";
 	public static final String HAND_UPDATE = "set_hand";
+	public static final String END_TURN = "end_turn";
 
 	private String _mySuspect;
 	private String _myAction;

@@ -19,8 +19,9 @@ dependencies {
     		'org.springframework:spring-webmvc:4.2.4.RELEASE',
     		'org.springframework:spring-websocket:4.2.4.RELEASE',
     		'org.springframework:spring-messaging:4.2.4.RELEASE',
-    		'javax.servlet:javax.servlet-api:3.0.1'
-    
+    		'javax.servlet:javax.servlet-api:3.0.1',
+            'log4j:log4j:1.2.17'
+
     runtime 'com.fasterxml.jackson.core:jackson-databind:2.3.2'
 
     testCompile 'junit:junit:4.11'

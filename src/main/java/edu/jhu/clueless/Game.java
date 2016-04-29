@@ -7,6 +7,7 @@ import edu.jhu.clueless.Constants.Room;
 import edu.jhu.clueless.Constants.PlayerAction;
 import edu.jhu.clueless.Constants.Suspect;
 import edu.jhu.clueless.board.GameBoard;
+import org.apache.log4j.Logger;
 
 import java.awt.*;
 import java.util.*;
@@ -19,6 +20,8 @@ public class Game {
 
 	private static Suspect[] SUSPECT_ORDER = { Suspect.MISS_SCARLET, Suspect.COLONEL_MUSTARD, Suspect.MRS_WHITE,
 			Suspect.MR_GREEN, Suspect.MRS_PEACOCK, Suspect.PROFESSOR_PLUM };
+
+	private static final Logger logger = Logger.getLogger(Game.class);
 
 	private String id;
 	private String name;
@@ -162,9 +165,10 @@ public class Game {
 	/**
 	 * Add new player to the game, if the given suspect is available and game is not active.
 	 * @param suspect Suspect to associate with the new player.
+	 * @return the added player
 	 * @throws CluelessException if the player could not be added
 	 */
-	public void addPlayer(String id, Suspect suspect) throws CluelessException {
+	public Player addPlayer(String id, Suspect suspect) throws CluelessException {
 		if (active.get()) {
 			throw new CluelessException("Game already started");
 		}
@@ -175,6 +179,8 @@ public class Game {
 		if (existingPlayer != null) {
 			throw new CluelessException("The requested suspect is already taken");
 		}
+
+		return newPlayer;
 	}
 
 	/**
@@ -405,12 +411,16 @@ public class Game {
 			allowedActions.remove(player.getID());
 		}
 
+		logger.debug(String.format("Turn ended for player=%s", player));
+
 		// Set the game to inactive if there are no more players left, otherwise rotate to the next player
 		if (getNumActivePlayers() < 1) {
 			active.compareAndSet(true, false);
 		} else {
 			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
 		}
+
+		logger.debug(String.format("It is now player=%s's turn", getPlayerTurn()));
 	}
 
 	private int getNumActivePlayers() {

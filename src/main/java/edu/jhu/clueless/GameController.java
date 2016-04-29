@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,8 @@ public class GameController {
 	public static final String SESSION_CLIENT_ID = "clientId";
 	public static final String SESSION_GAME_ID = "gameId";
 	public static final String SESSION_VERSION_ID = "version";
+
+	private static final Logger logger = Logger.getLogger(GameController.class);
 	
 	/* 
 	 * Channels 
@@ -139,16 +142,21 @@ public class GameController {
 	public ResponseEntity<String> joinGame(@RequestParam(name="id") String gameId,
 										   @RequestParam(name="suspect") String character,
 										   HttpServletRequest request){
+
 		String playerId = (String) request.getSession().getAttribute(SESSION_CLIENT_ID);
+
+		logger.debug(String.format("PlayerId=%s requesting to join gameId=%s with character=%s",
+				playerId, gameId, character));
 
 		Game game = reg.get(gameId);
 		if (game == null) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid game ID");
 		}
 
+		Player addedPlayer;
 		try {
 			String charNorm = normalizeConstant(character);
-			game.addPlayer(playerId, Constants.Suspect.valueOf(charNorm));
+			addedPlayer = game.addPlayer(playerId, Constants.Suspect.valueOf(charNorm));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Unknown character=" + character);
 		} catch (CluelessException e) {
@@ -161,6 +169,9 @@ public class GameController {
 		// lastly - add the gameid to the players session only
 		// if joining game succeeded
 		request.getSession().setAttribute("gameId", gameId);
+
+		logger.debug(String.format("Added player=%s to game=%s", addedPlayer, gameId));
+
 		return ResponseEntity.ok(gameId);
 	}
 
@@ -264,7 +275,7 @@ public class GameController {
 
 		sendMessageToUser(client.getPlayerId(), client);
 	}
-	
+
 	/**
 	 * Processes Game Responses to Suggestions
 	 * @param client
@@ -339,6 +350,33 @@ public class GameController {
 			}
  		}
 	}
+
+	/**
+	 * Processes Game Suggestions
+	 * @param client
+	 */
+	@MessageMapping("end_turn")
+	public void endTurn(ClientAction client){
+		String playerId = client.getPlayerId();
+		String gameId = client.getGameId();
+
+		Game game = reg.get(gameId);
+		if (game == null) {
+			sendMessageToUser(playerId, "Invalid game ID");
+			return;
+		}
+
+		Player player = game.getPlayer(client.getPlayerId());
+		try {
+			game.endTurn(player);
+		} catch (CluelessException e) {
+			sendMessageToUser(playerId, e.getMessage());
+			return;
+		}
+
+		String playerTurn = getDisplayCharFromPlayer(game, game.getPlayerTurn().getID());
+		sendGameMessageAllPlayers(gameId, "It is " + playerTurn + "'s turn");
+	}
 	
 	/**
 	 * Delivers a game chat message to all players of the game
@@ -348,6 +386,8 @@ public class GameController {
 	public void gameChat(ClientAction client){
 		String playerId = client.getPlayerId();
 		String gameId = client.getGameId();
+
+		logger.debug(String.format("PlayerId=%s requesting to chat in gameId=%s", playerId, gameId));
 
 		Game game = reg.get(gameId);
 		if (game == null) {

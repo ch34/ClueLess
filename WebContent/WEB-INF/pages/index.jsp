@@ -19,6 +19,7 @@ var ACTION_SUGGEST = "suggest";
 var ACTION_RESPOND = "respondsuggest";
 var ACTION_MOVE = "move";
 var ACTION_ACCUSE = "accuse";
+var ACTION_END_TURN = "end_turn";
 var ACTION_CHAT = "chat";
 var HAND_UPDATE = "set_hand";
 var stompClient;
@@ -61,6 +62,7 @@ var clientMoveAction = new ClientAction(ACTION_MOVE);
 var clientAccuseAction = new ClientAction(ACTION_ACCUSE);
 var clientRespondAction = new ClientAction(ACTION_RESPOND);
 var clientSuggestAction = new ClientAction(ACTION_SUGGEST);
+var clientEndTurnAction = new ClientAction(ACTION_END_TURN);
 var clientChatAction = new ClientAction(ACTION_CHAT);
 
 // calls server for available games
@@ -111,6 +113,7 @@ $(document).ready(this.selectGame);
   				<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
   				<button id="respond" onclick="actionRespondSuggest();">Respond</button>
   				<button id="accuse" onclick="actionAccuse();">Accuse</button>
+				  <button id="endTurn" onclick="actionEndTurn();">End turn</button>
    			  </div>
 			</div>
 			<div class="gameCards" id="gameCards">
