@@ -20,7 +20,7 @@ public class Game {
 	private static Suspect[] SUSPECT_ORDER = { Suspect.MISS_SCARLET, Suspect.COLONEL_MUSTARD, Suspect.MRS_WHITE,
 			Suspect.MR_GREEN, Suspect.MRS_PEACOCK, Suspect.PROFESSOR_PLUM };
 
-	private UUID id;
+	private String id;
 	private String name;
 	private GameBoard board;
 	private Player winner;
@@ -46,14 +46,18 @@ public class Game {
 	/**
 	 * Actions (i.e. move, suggest, or accuse), that each player is currently allowed to take
 	 */
-	private Map<UUID, Set<PlayerAction>> allowedActions;
+	private Map<String, Set<PlayerAction>> allowedActions;
 
 	public Game() {
 		this("New Game");
 	}
 
 	public Game(String name) {
-		id = UUID.randomUUID();
+		this(UUID.randomUUID().toString(), name);
+	}
+
+	public Game(String id, String name) {
+		this.id = id;
 		this.name = name;
 		board = new GameBoard();
 		caseFile = new HashMap<>();
@@ -114,7 +118,7 @@ public class Game {
 		}
 	}
 
-	public UUID getId() {
+	public String getId() {
 		return id;
 	}
 
@@ -158,9 +162,28 @@ public class Game {
 	/**
 	 * Add new player to the game, if the given suspect is available and game is not active.
 	 * @param suspect Suspect to associate with the new player.
-	 * @return Id of the new player, or null if the player could not be added.
+	 * @throws CluelessException if the player could not be added
 	 */
-	public UUID addPlayer(Suspect suspect) throws CluelessException {
+	public void addPlayer(String id, Suspect suspect) throws CluelessException {
+		if (active.get()) {
+			throw new CluelessException("Game already started");
+		}
+
+		Player newPlayer = new Player(id, suspect);
+		Player existingPlayer = players.putIfAbsent(suspect, newPlayer);
+
+		if (existingPlayer != null) {
+			throw new CluelessException("The requested suspect is already taken");
+		}
+	}
+
+	/**
+	 * Add new player to the game, if the given suspect is available and game is not active.
+	 * @param suspect Suspect to associate with the new player.
+	 * @return Id of the added player
+	 * @throws CluelessException if the player could not be added
+	 */
+	public String addPlayer(Suspect suspect) throws CluelessException {
 		if (active.get()) {
 			throw new CluelessException("Game already started");
 		}
@@ -179,7 +202,7 @@ public class Game {
 	 * @param id Id of player to retrieve
 	 * @return The player associated with the given ID, or null if no player is associated with the given ID.
 	 */
-	public Player getPlayer(UUID id) {
+	public Player getPlayer(String id) {
 		for (Player player : players.values()) {
 			if (player.getID().equals(id)) {
 				return player;

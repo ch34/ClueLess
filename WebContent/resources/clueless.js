@@ -1,7 +1,30 @@
+/**
+ * Disables / hides selections on load of the page
+ */
+function startup(){
+	hidGameCardSelection();
+	// disable the chat feature on load
+	$("#chatMessage").prop("disabled",true);
+	$("#messageBtn").prop("disabled",true);
+	$("#connect").hide();
+	$("#disconnect").hide();
+}
 
+/**
+ * 
+ * @param myGameId
+ */
 function connect(myGameId) {
     if ('WebSocket' in window){
-    	var url = "ws://localhost:8080/clueless/stomp";
+    	var protocol = "ws://";
+    	var hostname = window.location.hostname;
+    	var port = window.location.port;
+    	var path = "/clueless/stomp";
+    	var url = protocol + hostname;
+    	if (port && port != 0 && port != ""){
+    		url = url + ":" + port;
+    	}
+    	url = url + path;
 		stompClient = Stomp.client(url);
 		
 		// connect via websocket. username/password are
@@ -18,6 +41,11 @@ function connect(myGameId) {
 			stompClient.subscribe('/queue/user-'+playerId, function(frame3) {
 				parseUserMessage(frame3.body);
 			});
+			
+			// enable the chat feature
+			$("#chatMessage").prop("disabled",false);
+			$("#messageBtn").prop("disabled",false);
+			
 		}, function(errorFrame) {
 			// error callback
 			if (errorFrame && errorFrame.headers){
@@ -35,12 +63,23 @@ function connect(myGameId) {
  * disconnects player from the game
  */
 function disconnect() {
-	$("#startendGame").hide();
 	$("#joiningGame").show();
+	gameId = null; // clear gameId
+	character = null; // clear character
+	//disable chat
+	$("#chatMessage").prop("disabled",true);
+	$("#messageBtn").prop("disabled",true);
+	// hide game start/leave actions
+	$("#connect").hide();
+	$("#disconnect").hide();
 	
  	if (stompClient){
  		stompClient.disconnect();
  	}
+ 	
+ 	// now make a call to selectGame to load
+ 	// all available games again
+ 	selectGame();
 }
 
 /**
@@ -49,6 +88,19 @@ function disconnect() {
 function sendChat() {
     clientChatAction.setMessage( $("#chatMessage").val() );
     sendAction(clientChatAction);
+    // now clear the typing area
+    $("#chatMessage").val("");
+}
+
+/**
+ * 
+ * @param event
+ */
+function sendChatKeyPress(event){
+	var chCode = event.keyCode;
+	if ( chCode === 13 ){ // Enter Key
+		sendChat();
+	}
 }
 
 /**
@@ -67,11 +119,40 @@ function actionMove(direction){
 }
 
 function actionSuggest(){
-	// TODO
-	// isRoom(getClientLocation)
-	// selectSuspect()
-	// selectWeapon()
+	// first check to make sure client is in a room
+	var loc = clientSuggestAction.getLocation();
+	var inRoom = isPlayerInRoom(loc.x,loc.y);
+	if(!inRoom){
+		updateChatArea("Sorry, you must be in a room");
+		console.log("location is [" + loc.x + ":" + loc.y + "]");
+		return;
+	}
+	var cards = [];
+	cards.push( $("#characters").val() );
+	cards.push( $("#weapons").val() );
+	clientSuggestAction.setCards(cards);
 	sendAction(clientSuggestAction);
+	hidGameCardSelection();
+}
+
+function isPlayerInRoom(locx, locy){
+	if( locx == null || locy == null){
+		return false;
+	}
+	// rooms are at the following points
+	// {0,0}, {0,2}, {0,4}
+	// {2,0}, {2,2}, {2,4}
+	// {4,0}, {4,2}, {4,4}
+	// x & y must both be either 0, 2, or 4
+	// therefore we just check to see if they
+	// are both 0, 2, and/or 4
+	var rooms = [0,2,4];
+	if ( ( $.inArray(locx,rooms) >= 0) &&
+		 ( $.inArray(locy,rooms) >= 0)){
+		return true;
+	}
+	
+	return false;
 }
 
 function actionAccuse(){
@@ -92,9 +173,11 @@ function actionRespondSuggest(){
  * Selects a character pawn for the player
  */
 function selectCharacter(){
-	// TODO
-	// charater = selectSuspect();
-	window.console.log("TODO");
+	var myCharacter = $("#characters").val();
+	if (myCharacter){
+		character = myCharacter;
+		hidGameCardSelection();
+	}
 }
 
 /**
@@ -136,6 +219,8 @@ function selectGame(){
 				var current = "<option value=" +item + ">" + item + "</option>";
 				$("#gameList").append(current);
 			});
+			hidGameCardSelection();
+			showCharacterSelection();
 		},
 		error: function(result){
 			alert("Failed to retrieve game list");
@@ -149,8 +234,24 @@ function selectGame(){
 function createGame(){
 	// TODO
 	// make Ajax call to create game
-	// if success then call join automatically
-	// joinGame(myGameId);
+	// if success then show characters for the user to select
+	$.ajax({
+		url: "home/createGame", 
+		success: function(result){
+			// result should just be a string, gameId
+			gameId = result;
+			// show characters for selection
+			showCharacterSelection();
+			// make a call to getAvailableGames which will
+			// load the newly created game
+			selectGame();
+			// now set the Available games to the gameId
+			//$("#gameList").val(gameId);
+		},
+		error: function(result){
+			updateChatArea(result);
+		}
+	});
 	window.console.log("TODO");
 }
 
@@ -158,41 +259,41 @@ function createGame(){
  * Joins a player to a game. If not gameid is passed in
  * it looks for a selected game in the available games list
  */
-function joinGame(myGameId){
-	// TODO - uncomment once selectCharacter has been implemented
-//	if( !character ){
-//		updateChatArea("Sorry, please select a character first.");
-//		return;
-//	}
-//	alert("Player should select a character pawn first");
-	character = "Miss Scarlett";
-	
-	if( myGameId ){
-		gameId = myGameId;
-	} else {
-		gameId = $("#gameList").val();
+function joinGame(){
+	if( !character ){
+		updateChatArea("Sorry, please select a character first.");
+		return;
 	}
 	
-	window.console.log("Joining Game " + gameId);
+	if( null == gameId || gameId == "" ){
+		gameId = $("#gameList").val();
+	  // double check to make sure the selection list was not empty
+	  if ( null == gameId || gameId == ""){
+		updateChatArea("Sorry, please create a game first");
+		return;
+	  }
+	}
 	$.ajax({
 		url:'home/joinGame?id='+gameId+"&suspect="+character,
 		success: function(result){
-			if(result == "success"){
-				connect(gameId);
-				$("#startendGame").show();
-				$("#joiningGame").hide();
-				// update the global actions for gameId
-				clientMoveAction.setGameId(gameId);
-				clientAccuseAction.setGameId(gameId);
-				clientRespondAction.setGameId(gameId);
-				clientSuggestAction.setGameId(gameId);
-				clientChatAction.setGameId(gameId);
-			} else {
-				updateChatArea("Sorry, unable to join game: " + result);
-			}
+			// result should be the gameId but could be anything
+			// we really don't care as once we enter here the 
+			// client has successfully joined on the server side
+			connect(gameId);
+			$("#connect").show();
+			$("#disconnect").show();
+			$("#joiningGame").hide();
+			// update the global actions for gameId
+			clientMoveAction.setGameId(gameId);
+			clientAccuseAction.setGameId(gameId);
+			clientRespondAction.setGameId(gameId);
+			clientSuggestAction.setGameId(gameId);
+			clientChatAction.setGameId(gameId);
 		},
 		error: function(result){
-			alert("Sorry, unable to access the game");
+			// show character selection again ??
+			showCharacterSelection();
+			updateChatArea(result.responseText);
 		}
 	});
 }
@@ -204,6 +305,50 @@ function startGame(){
 	var startAction = new ClientAction("start");
 	startAction.setGameId(gameId);
 	sendAction(startAction);
+	$("#connect").hide();
+}
+
+/**
+ * 
+ */
+function showCharacterSelection(){
+	$("#gameCards").show(); // show main section
+	$("#characterCards").show();
+	$("#charactersBtn").show();
+}
+
+/**
+ * 
+ */
+function showAccuseSelection(){
+	$("#gameCards").show(); // show main section
+	$("#characterCars").show();
+	$("#roomCards").show();
+	$("#weaponCards").show();
+	$("#accuseBtn").show();
+}
+
+/**
+ * 
+ */
+function showSuggestSelection(){
+	// we don't need to show a room because
+	// the player must be in a room to make a suggestion
+	// so just grab the room he is in instead of showing it
+	$("#gameCards").show(); // show main section
+	$("#characterCards").show();
+	$("#weaponCards").show();
+	$("#suggestBtn").show();
+}
+
+/**
+ * 
+ */
+function hidGameCardSelection(){
+	// we hide all elements so when others need to show
+	// only the options they need will be shown
+	$("#gameCards").children().hide();
+	$("#gameCards").hide();
 }
 
 /**
@@ -219,6 +364,9 @@ function updateSuspectPawns(){
  * @param msg message to display
  */
 function updateChatArea(msg){
+	var time = new Date();
+	var timePrefix = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+	msg = timePrefix + ' ' + msg;
 	var current = $("#response").val();
 	$("#response").val(msg + "\n" + current);
 }
@@ -228,26 +376,18 @@ function updateChatArea(msg){
 responseActionMap = {};
 responseActionMap.move = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.suggest = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.accuse = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.respondsuggest = function(msg){
 	// TODO do something with the response
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.chat = function(msg){
@@ -258,8 +398,6 @@ responseActionMap.start = function(msg){
 	// TODO
 	// disable un-needed fields
 	// notify player game has started
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
 }
 
 responseActionMap.location = function(msg){
@@ -267,8 +405,11 @@ responseActionMap.location = function(msg){
 	// get players locations from msg
 	// to start just notify via chat where the players are
 	// To finish, update the pawns on the game board
-	var l_msg = "Player " + msg.playerId + ": " + msg.action;
-	updateChatArea(l_msg);
+}
+
+responseActionMap.set_hand = function(msg){
+	console.log('==========');
+	console.log(msg);
 }
 
 /**
