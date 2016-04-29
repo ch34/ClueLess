@@ -119,11 +119,40 @@ function actionMove(direction){
 }
 
 function actionSuggest(){
-	// TODO
-	// isRoom(getClientLocation)
-	// selectSuspect()
-	// selectWeapon()
+	// first check to make sure client is in a room
+	var loc = clientSuggestAction.getLocation();
+	var inRoom = isPlayerInRoom(loc.x,loc.y);
+	if(!inRoom){
+		updateChatArea("Sorry, you must be in a room");
+		console.log("location is [" + loc.x + ":" + loc.y + "]");
+		return;
+	}
+	var cards = [];
+	cards.push( $("#characters").val() );
+	cards.push( $("#weapons").val() );
+	clientSuggestAction.setCards(cards);
 	sendAction(clientSuggestAction);
+	hidGameCardSelection();
+}
+
+function isPlayerInRoom(locx, locy){
+	if( locx == null || locy == null){
+		return false;
+	}
+	// rooms are at the following points
+	// {0,0}, {0,2}, {0,4}
+	// {2,0}, {2,2}, {2,4}
+	// {4,0}, {4,2}, {4,4}
+	// x & y must both be either 0, 2, or 4
+	// therefore we just check to see if they
+	// are both 0, 2, and/or 4
+	var rooms = [0,2,4];
+	if ( ( $.inArray(locx,rooms) >= 0) &&
+		 ( $.inArray(locy,rooms) >= 0)){
+		return true;
+	}
+	
+	return false;
 }
 
 function actionAccuse(){
@@ -291,7 +320,7 @@ function showCharacterSelection(){
 /**
  * 
  */
-function showAccuesSelection(){
+function showAccuseSelection(){
 	$("#gameCards").show(); // show main section
 	$("#characterCars").show();
 	$("#roomCards").show();
@@ -299,6 +328,9 @@ function showAccuesSelection(){
 	$("#accuseBtn").show();
 }
 
+/**
+ * 
+ */
 function showSuggestSelection(){
 	// we don't need to show a room because
 	// the player must be in a room to make a suggestion
@@ -306,7 +338,7 @@ function showSuggestSelection(){
 	$("#gameCards").show(); // show main section
 	$("#characterCards").show();
 	$("#weaponCards").show();
-	$("#accuseBtn").show();
+	$("#suggestBtn").show();
 }
 
 /**

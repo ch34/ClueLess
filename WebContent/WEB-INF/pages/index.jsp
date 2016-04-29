@@ -49,7 +49,7 @@ class ClientAction {
 	getMessage(){ return this.message; }
 	setMessage(msg){ this.message = msg; }
 	setCards(cards){ this.cards = cards; }
-	getCars(){ return this.cards; }
+	getCards(){ return this.cards; }
 }
 
 //create global client actions which will be reused multiple times
@@ -105,7 +105,7 @@ $(document).ready(this.selectGame);
      			  <button id="moveUp" onclick='actionMove("Up");'></button>
   	 			  <button id="moveDown" onclick='actionMove("Down");'></button>
   				</span>
-  				<button id="suggest" onclick="actionSuggest();">Suggest</button>
+  				<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
   				<button id="respond" onclick="actionRespondSuggest();">Respond</button>
   				<button id="accuse" onclick="actionAccuse();">Accuse</button>
    			  </div>
@@ -150,7 +150,7 @@ $(document).ready(this.selectGame);
 				</span>
 				<button id="charactersBtn" type="button" onclick="selectCharacter();">OK</button>
 				<button id="accuseBtn" type="button">OK</button>
-				<button id="suggestBtn" type="button">OK</button>
+				<button id="suggestBtn" type="button" onclick="actionSuggest();">OK</button>
 			</div>
 			<div class="playerHand">
 				<p>Players Hand here. Shows the player what cards they have</p>
