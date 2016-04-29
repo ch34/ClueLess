@@ -82,5 +82,100 @@ footer p{
 
 }
 .playerHand {
-
+	
 }
+
+.card {
+	background-size: 100%;
+	background-repeat: no-repeat;
+	height: 112px;
+	width: 70px;
+	float: left;
+	margin: 0px;
+	padding: 0px !important;
+}
+
+.card.MRS_WHITE {
+	background-image: url("images/cards/suspects/white_card_small.png");
+}
+
+.card.MR_GREEN{
+	background-image: url("images/cards/suspects/green_card_small.png");
+}
+
+.card.MISS_SCARLET {
+	background-image: url("images/cards/suspects/scarlett_card_small.png");
+}
+
+.card.MRS_PEACOCK {
+	background-image: url("images/cards/suspects/peacock_card_small.png");
+}
+
+.card.PROFESSOR_PLUM {
+	background-image: url("images/cards/suspects/plum_card_small.png");
+}
+
+.card.COLONEL_MUSTARD {
+	background-image: url("images/cards/suspects/mustard_card_small.png");
+}
+
+.card.KITCHEN {
+	background-image: url("images/cards/rooms/kitchen_room_card_small.png");
+}
+
+.card.STUDY {
+	background-image: url("images/cards/rooms/study_room_card_small.png");
+}
+
+.card.CONSERVATORY {
+	background-image: url("images/cards/rooms/conservatory_room_card_small.png");
+}
+
+.card.DINING_ROOM {
+	background-image: url("images/cards/rooms/dining_room_card_small.png");
+}
+
+.card.BILLIARD_ROOM {
+	background-image: url("images/cards/rooms/billiard_room_card_small.png");
+}
+
+.card.BALLROOM {
+	background-image: url("images/cards/rooms/ball_room_card_small.png");
+}
+
+.card.LOUNGE {
+	background-image: url("images/cards/rooms/lounge_room_card_small.png");
+}
+
+.card.HALL {
+	background-image: url("images/cards/rooms/hall_room_card_small.png");
+}
+
+.card.LIBRARY {
+	background-image: url("images/cards/rooms/library_room_card_small.png");
+}
+
+.card.CANDLESTICK {
+	background-image: url("images/cards/weapons/candlestick_card_small.png");
+}
+
+.card.ROPE {
+	background-image: url("images/cards/weapons/rope_card_small.png");
+}
+
+.card.KNIFE {
+	background-image: url("images/cards/weapons/knife_card_small.png");
+}
+
+.card.LEAD_PIPE {
+	background-image: url("images/cards/weapons/pipe_card_small.png");
+}
+
+.card.WRENCH {
+	background-image: url("images/cards/weapons/wrench_card_small.png");
+}
+
+.card.PISTOL {
+	background-image: url("images/cards/weapons/pistol_card_small.png");
+}
+
