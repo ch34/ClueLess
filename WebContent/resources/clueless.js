@@ -201,6 +201,10 @@ function actionAccuse(){
 	sendAction(clientAccuseAction);
 }
 
+function actionEndTurn(){
+	sendAction(clientEndTurnAction);
+}
+
 function actionRespondSuggest(){
 	// TODO
 	// selectCard();
@@ -324,6 +328,7 @@ function joinGame(){
 			clientRespondAction.setGameId(gameId);
 			clientSuggestAction.setGameId(gameId);
 			clientChatAction.setGameId(gameId);
+			clientEndTurnAction.setGameId(gameId);
 		},
 		error: function(result){
 			// show character selection again ??
