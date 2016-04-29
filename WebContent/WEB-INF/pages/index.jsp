@@ -20,6 +20,7 @@ var ACTION_RESPOND = "respondsuggest";
 var ACTION_MOVE = "move";
 var ACTION_ACCUSE = "accuse";
 var ACTION_CHAT = "chat";
+var HAND_UPDATE = "set_hand";
 var stompClient;
 
 // let the server generate the id
@@ -39,6 +40,7 @@ class ClientAction {
 		this.locationY = 0;
 		this.message = "";
 		this.cards = [];
+		this.suspect = "";
 	}
 	getAction(){ return this.action; }
 	getPlayerId(){ return this.playerId; }
@@ -50,6 +52,7 @@ class ClientAction {
 	setMessage(msg){ this.message = msg; }
 	setCards(cards){ this.cards = cards; }
 	getCards(){ return this.cards; }
+	getSuspect() { return this.suspect; }
 }
 
 //create global client actions which will be reused multiple times

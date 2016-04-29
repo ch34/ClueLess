@@ -195,6 +195,7 @@ public class GameController {
 			return;
 		}
 
+		client.setSuspect(player.getSuspect().toString());
 		sendGameMessageAllPlayers(gameId, client);
 	}
 	
@@ -221,6 +222,20 @@ public class GameController {
 		}
 
 		sendGameMessageAllPlayers(gameId, "Game has started");
+		String playerTurn = getDisplayCharFromPlayer(game, game.getPlayerTurn().getID());
+		sendGameMessageAllPlayers(gameId, "It is " + playerTurn + "'s turn");
+
+		// Notify all users of their hand
+		for (Player player : game.getPlayers()) {
+			String thisPlayerId = player.getID();
+
+			ClientAction update = new ClientAction();
+			update.setCards(player.getCardNames());
+			update.setAction(ClientAction.HAND_UPDATE);
+			update.setPlayerId(thisPlayerId);
+
+			sendMessageToUser(thisPlayerId, update);
+		}
 	}
 	
 	/**
