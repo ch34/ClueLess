@@ -128,13 +128,21 @@ function actionSuggest(){
 		return;
 	}
 	var cards = [];
-	cards.push( $("#characters").val() );
-	cards.push( $("#weapons").val() );
+	cards.push( selectSuspect() );
+	cards.push( selectWeapon() );
+	cards.push(getClientsRoomName(loc.x, loc.y) );
 	clientSuggestAction.setCards(cards);
 	sendAction(clientSuggestAction);
 	hidGameCardSelection();
 }
 
+
+/**
+ * 
+ * @param locx
+ * @param locy
+ * @returns {Boolean}
+ */
 function isPlayerInRoom(locx, locy){
 	if( locx == null || locy == null){
 		return false;
@@ -153,6 +161,36 @@ function isPlayerInRoom(locx, locy){
 	}
 	
 	return false;
+}
+
+
+/**
+ * TODO - merge with Muhamads code once done
+ */
+function getClientsRoomName(locx, locy){
+	var myRooms = {
+			Conservatory: {x:0 , y:0 , name: "CONSERVATORY"},
+			Ballroom: {x:0 , y:2 , name: "BALLROOM"},
+			Kitchen:  {x:0 , y:4 , name: "KITCHEN"},
+			Library:  {x:2 , y:0 , name: "LIBRARY"},
+			Billiard_Room:  {x:2 , y:2 , name: "BILLIARD_ROOM"},
+			Dining_Room:  {x:2 , y:4 , name: "DINING_ROOM"},
+			Study:  {x:4 , y:0 , name: "STUDY"},
+			Hall:  {x:4 , y:2 , name: "HALL"},
+			Lounge:  {x:4 , y:4 , name: "LOUNGE"}
+	};
+	
+	var clientRoom;
+	for( var room in myRooms) {
+		if ( !myRooms.hasOwnProperty(room)){ continue; }
+		var obj = myRooms[room];
+		if(obj.x == locx && obj.y == locy){
+			clientRoom = obj.name;
+			console.log("clients room is " + clientRoom);
+		}
+	}
+	
+	return clientRoom
 }
 
 function actionAccuse(){
@@ -188,24 +226,21 @@ function selectCharacter(){
  * selects a room
  */
 function selectRoom() {
-	// TODO
-	window.console.log("TODO");
+	return $("#rooms").val();
 }
 
 /**
  * selects a suspect
  */
 function selectSuspect() {
-	// TODO
-	window.console.log("TODO");
+	return $("#characters").val();
 }
 
 /**
  * selects a weapon
  */
 function selectWeapon() {
-	// TODO
-	window.console.log("TODO");
+	return $("#weapons").val();
 }
 
 /**
