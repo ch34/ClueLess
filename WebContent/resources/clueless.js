@@ -121,6 +121,27 @@ function actionMove(direction){
 	// TODO
 	// update direction before sending
 	window.console.log("moving " + direction);
+	var loc = clientMoveAction.getLocation();
+	
+	window.console.log("Old Location " + loc.x + ", " + loc.y);
+	if(direction == "Left")
+	{
+		clientMoveAction.setLocation(loc.x-1, loc.y);
+	}
+	else if(direction == "Right")
+	{
+		clientMoveAction.setLocation(loc.x+1, loc.y);
+	}
+	else if(direction == "Up")
+	{
+		clientMoveAction.setLocation(loc.x, loc.y+1);
+	}
+	else if(direction == "Down")
+	{
+		clientMoveAction.setLocation(loc.x, loc.y-1);
+	}
+	var newloc = clientMoveAction.getLocation();
+	window.console.log("Old Location " + newloc.x + ", " + newloc.y);
 	sendAction(clientMoveAction);
 }
 
@@ -460,6 +481,7 @@ function showPlayersCards(cards){
 responseActionMap = {};
 responseActionMap.move = function(msg){
 	// TODO do something with the response
+	window.console.log("Move Response: " + msg);
 }
 
 responseActionMap.accuse = function(msg){
