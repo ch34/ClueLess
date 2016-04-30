@@ -76,6 +76,11 @@ footer p{
 #chatInput input{
 	width: 70%;
 }
+
+input#gameNameInput {
+	min-width: 200px;
+}
+
 .title{
 	float:left;
 }

@@ -94,36 +94,50 @@ $(document).ready(this.selectGame);
 			</div>
 		</div>
 		<div class="content">
-		    <div class="startupSection">
-		      <span id="joiningGame"> Available Games 
-    			<select id="gameList"></select>
-				<button type="button" id="joinGame" onclick="joinGame();">Join Game</button>
+		    <div id="startupSection">
+			  <div id="createGameSection">
+    			<input id="gameNameInput" placeholder="Enter name of new game..."></input>
 				<button type="button" id="createGame" onclick="createGame();">Create Game</button>
-			  </span>
-			  <button type="button" id="connect" onclick="startGame();">Start Game</button>
-			  <button type="button" id="disconnect" onclick="disconnect();">Leave Game</button>
+			  </div>
+				<select id="characters" name="characters">
+					<option value="" disabled selected>Select your character</option>
+					<option value="MISS_SCARLET">Miss Scarlet</option>
+					<option value="MRS_PEACOCK">Mrs. Peacock</option>
+					<option value="MRS_WHITE">Mrs. White</option>
+					<option value="PROFESSOR_PLUM">Professor Plum</option>
+					<option value="COLONEL_MUSTARD">Colonel Mustard</option>
+					<option value="MR_GREEN">Mr. Green</option>
+				</select>
+    			<select id="gameList">
+					<option value="" disabled selected>Select game</option>
+				</select>
+				<button type="button" id="joinGame" onclick="joinGame();">Join Game</button>
 		    </div>
-			<div class="gameBoard">
-			  <h2>Welcome to ClueLess</h2>
-			  <p>Game Board Here</p>
-			  <div id="toolbar" class="ui-widget-header ui-corner-all">
+			<div>
+				<button type="button" id="connect" onclick="startGame();">Start Game</button>
+				<button type="button" id="disconnect" onclick="disconnect();">Leave Game</button>
+			</div>
+			<div id="activeGame">
+				<div class="gameBoard">
+					<p>Game Board Here</p>
+					<div id="toolbar" class="ui-widget-header ui-corner-all">
     			<span id="buttonsMove">
      			  <button id="moveLeft" onclick='actionMove("Left");'></button>
      			  <button id="moveRight" onclick='actionMove("Right");'></button>
      			  <button id="moveUp" onclick='actionMove("Up");'></button>
   	 			  <button id="moveDown" onclick='actionMove("Down");'></button>
   				</span>
-  				<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
-  				<button id="respond" onclick="actionRespondSuggest();">Respond</button>
-  				<button id="accuse" onclick="showAccuseSelection();">Accuse</button>
-				  <button id="endTurn" onclick="actionEndTurn();">End turn</button>
-   			  </div>
-			</div>
-			<div class="gameCards" id="gameCards">
-				<p>Select your Card(s)</p>
-				<span id="characterCards">
-				Characters 
-				<select id="characters" name="characters">
+						<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
+						<button id="respond" onclick="actionRespondSuggest();">Respond</button>
+						<button id="accuse" onclick="showAccuseSelection();">Accuse</button>
+						<button id="endTurn" onclick="actionEndTurn();">End turn</button>
+					</div>
+				</div>
+				<div class="gameCards" id="gameCards">
+					<p>Select your Card(s)</p>
+				<span id="suspectCards">
+				Suspects
+				<select id="suspects" name="suspects">
 					<option value="MISS_SCARLET">Miss Scarlet</option>
 					<option value="MRS_PEACOCK">Mrs. Peacock</option>
 					<option value="MRS_WHITE">Mrs. White</option>
@@ -133,7 +147,7 @@ $(document).ready(this.selectGame);
 				</select>
 				</span>
 				<span id="roomCards">
-				Rooms 
+				Rooms
 				<select id="rooms" name="rooms">
 					<option value="KITCHEN">Kitchen</option>
 					<option value="STUDY">Study</option>
@@ -147,7 +161,7 @@ $(document).ready(this.selectGame);
 				</select>
 				</span>
 				<span id="weaponCards">
-				Weapons 
+				Weapons
 				<select id="weapons" name="weapons">
 					<option value="CANDLESTICK">Candlestick</option>
 					<option value="ROPE">Rope</option>
@@ -157,11 +171,11 @@ $(document).ready(this.selectGame);
 					<option value="PISTOL">Pistol</option>
 				</select>
 				</span>
-				<button id="charactersBtn" type="button" onclick="selectCharacter();">OK</button>
-				<button id="accuseBtn" type="button" onclick="actionAccuse();">OK</button>
-				<button id="suggestBtn" type="button" onclick="actionSuggest();">OK</button>
+					<button id="accuseBtn" type="button" onclick="actionAccuse();">OK</button>
+					<button id="suggestBtn" type="button" onclick="actionSuggest();">OK</button>
+				</div>
+				<div class="playerHand" id="playerHand"></div>
 			</div>
-			<div class="playerHand" id="playerHand"></div>
 		</div>
 		<div class="detective">
 			<div class="rightSidebar-spacer"></div>

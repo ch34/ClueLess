@@ -9,6 +9,7 @@ function startup(){
 	$("#connect").hide();
 	$("#disconnect").hide();
 	$("#gameInfo").hide();
+	$("#activeGame").hide();
 }
 
 /**
@@ -220,17 +221,6 @@ function actionRespondSuggest(){
 }
 
 /**
- * Selects a character pawn for the player
- */
-function selectCharacter(){
-	var myCharacter = $("#characters").val();
-	if (myCharacter){
-		character = myCharacter;
-		hidGameCardSelection();
-	}
-}
-
-/**
  * selects a room
  */
 function selectRoom() {
@@ -261,13 +251,12 @@ function selectGame(){
 		success: function(result){
 			// empty list so we don't have duplicates if method
 			// is called multiple times
-			$("#gameList").empty();
+			$("#gameList option[value!='']").remove();
 			$.each(result, function(index, item){
-				var current = "<option value=" +item + ">" + item + "</option>";
+				var current = "<option value=" +index + ">" + item + "</option>";
 				$("#gameList").append(current);
 			});
 			hidGameCardSelection();
-			showCharacterSelection();
 		},
 		error: function(result){
 			alert("Failed to retrieve game list");
@@ -279,16 +268,16 @@ function selectGame(){
  * Creates a new game and joins the player to it
  */
 function createGame(){
-	// TODO
-	// make Ajax call to create game
-	// if success then show characters for the user to select
+	var url = "home/createGame";
+	var gameName = $("#gameNameInput").val().trim();
+	if (gameName.length > 0) {
+		url = url + "?name=" + gameName;
+	}
 	$.ajax({
-		url: "home/createGame", 
+		url: url,
 		success: function(result){
 			// result should just be a string, gameId
 			gameId = result;
-			// show characters for selection
-			showCharacterSelection();
 			// make a call to getAvailableGames which will
 			// load the newly created game
 			selectGame();
@@ -307,10 +296,12 @@ function createGame(){
  * it looks for a selected game in the available games list
  */
 function joinGame(){
-	if( !character ){
+	var myCharacter = $("#characters").val();
+	if( !myCharacter ){
 		updateChatArea("Sorry, please select a character first.");
 		return;
 	}
+	character = myCharacter;
 	
 	if( null == gameId || gameId == "" ){
 		gameId = $("#gameList").val();
@@ -329,7 +320,7 @@ function joinGame(){
 			connect(gameId);
 			$("#connect").show();
 			$("#disconnect").show();
-			$("#joiningGame").hide();
+			$("#startupSection").hide();
 			// update the global actions for gameId
 			clientMoveAction.setGameId(gameId);
 			clientAccuseAction.setGameId(gameId);
@@ -344,7 +335,6 @@ function joinGame(){
 		},
 		error: function(result){
 			// show character selection again ??
-			showCharacterSelection();
 			updateChatArea(result.responseText);
 		}
 	});
@@ -362,32 +352,12 @@ function startGame(){
 /**
  * 
  */
-function showCharacterSelection(){
-	$("#gameCards").show(); // show main section
-	$("#characterCards").show();
-	$("#charactersBtn").show();
-}
-
-/**
- * 
- */
-function showAccuseSelection(){
-	$("#gameCards").show(); // show main section
-	$("#characterCars").show();
-	$("#roomCards").show();
-	$("#weaponCards").show();
-	$("#accuseBtn").show();
-}
-
-/**
- * 
- */
 function showSuggestSelection(){
 	// we don't need to show a room because
 	// the player must be in a room to make a suggestion
 	// so just grab the room he is in instead of showing it
 	$("#gameCards").show(); // show main section
-	$("#characterCards").show();
+	$("#suspectCards").show();
 	$("#weaponCards").show();
 	$("#suggestBtn").show();
 }
@@ -397,7 +367,7 @@ function showSuggestSelection(){
  */
 function showAccuseSelection(){
 	$("#gameCards").show(); // show main section
-	$("#characterCards").show();
+	$("#suspectCards").show();
 	$("#weaponCards").show();
 	$("#roomCards").show();
 	$("#accuseBtn").show();
@@ -489,6 +459,7 @@ responseActionMap.location = function(msg){
 
 responseActionMap.set_hand = function(msg){
 	$("#connect").hide();
+	$("#activeGame").show();
 	// so we can verify the data
 	window.console.log(msg);
 	showPlayersCards(msg.cards);
