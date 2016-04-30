@@ -87,7 +87,7 @@ $(document).ready(this.selectGame);
 	<div class="clearfix">
 		<div class="sidebar">
 			<div id="chatArea">
-				<textarea id="response" readonly></textarea>
+				<div id="notifications"></div>
 				  <div id="chatInput"> 
 					<input type="text" id="chatMessage" onkeyup="sendChatKeyPress(event,this);"/><button type="button" id="messageBtn" onclick="sendChat();">Send</button>
 				  </div>

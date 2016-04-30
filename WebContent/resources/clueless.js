@@ -130,7 +130,7 @@ function actionSuggest(){
 	var loc = clientSuggestAction.getLocation();
 	var inRoom = isPlayerInRoom(loc.x,loc.y);
 	if(!inRoom){
-		updateChatArea("Sorry, you must be in a room");
+		updateChatArea("Sorry, you must be in a room", 'error');
 		console.log("location is [" + loc.x + ":" + loc.y + "]");
 		return;
 	}
@@ -275,9 +275,7 @@ function createGame(){
 	}
 	$.ajax({
 		url: url,
-		success: function(result){
-			// result should just be a string, gameId
-			gameId = result;
+		success: function(){
 			// make a call to getAvailableGames which will
 			// load the newly created game
 			selectGame();
@@ -285,7 +283,7 @@ function createGame(){
 			//$("#gameList").val(gameId);
 		},
 		error: function(result){
-			updateChatArea(result);
+			updateChatArea(result, 'error');
 		}
 	});
 	window.console.log("TODO");
@@ -298,18 +296,16 @@ function createGame(){
 function joinGame(){
 	var myCharacter = $("#characters").val();
 	if( !myCharacter ){
-		updateChatArea("Sorry, please select a character first.");
+		updateChatArea("Sorry, please select a character first.", 'error');
 		return;
 	}
 	character = myCharacter;
-	
-	if( null == gameId || gameId == "" ){
-		gameId = $("#gameList").val();
-	  // double check to make sure the selection list was not empty
-	  if ( null == gameId || gameId == ""){
-		updateChatArea("Sorry, please create a game first");
+
+	gameId = $("#gameList").val();
+	// double check to make sure the selection list was not empty
+	if ( null == gameId || gameId == ""){
+		updateChatArea("Sorry, please select a game first", 'error');
 		return;
-	  }
 	}
 	$.ajax({
 		url:'home/joinGame?id='+gameId+"&suspect="+character,
@@ -319,7 +315,6 @@ function joinGame(){
 			// client has successfully joined on the server side
 			connect(gameId);
 			$("#connect").show();
-			$("#disconnect").show();
 			$("#startupSection").hide();
 			// update the global actions for gameId
 			clientMoveAction.setGameId(gameId);
@@ -335,7 +330,7 @@ function joinGame(){
 		},
 		error: function(result){
 			// show character selection again ??
-			updateChatArea(result.responseText);
+			updateChatArea(result.responseText, 'error');
 		}
 	});
 }
@@ -395,12 +390,19 @@ function updateSuspectPawns(){
  * Updates the chat message textarea
  * @param msg message to display
  */
-function updateChatArea(msg){
+function updateChatArea(msg, type){
 	var time = new Date();
 	var timePrefix = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
 	msg = timePrefix + ' ' + msg;
-	var current = $("#response").val();
-	$("#response").val(msg + "\n" + current);
+	var current = $("#notifications").val();
+
+	var formatted = msg;
+	if (type) {
+		formatted = '<span class="' + type + '">' + msg + '</span>';
+	}
+	$("#notifications").append(formatted + '<br>');
+	var elem = document.getElementById('data');
+	$("#notifications").scrollTop($("#notifications").height());
 }
 
 /**
@@ -475,9 +477,8 @@ function parseGameMessage(msg){
 		// execute the action
 		responseActionMap[msg.action](msg);
 	} catch(e){
-		// server did not retun a valid JSON string
-		// display message to user
-		updateChatArea(msg);
+		// Server responded with a simple string, assume it's an update message about game state
+		updateChatArea(msg, 'update');
 	}
 }
 
@@ -496,8 +497,7 @@ function parseUserMessage(msg){
 		// execute the action
 		responseActionMap[msg.action](msg);
 	} catch(e){
-		// server did not retun a valid JSON string
-		// display message to user
-		updateChatArea(msg);
+		// Server responded with a simple string, assume it's an error message for user
+		updateChatArea(msg, 'error');
 	}
 }
