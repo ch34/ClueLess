@@ -163,6 +163,11 @@ $(document).ready(this.selectGame);
 			</div>
 			<div class="playerHand" id="playerHand"></div>
 		</div>
+		<div class="detective">
+			<div class="rightSidebar-spacer"></div>
+			<div class="CASE_FILE"></div>
+			<div class="card CARD_BACK"></div>
+		</div>
 	</div>
 	<footer>
 	    <p>

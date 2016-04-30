@@ -34,9 +34,19 @@ header h1{
 .sidebar #chatArea{
 	padding: 10 5 5 10
 }
+.detective{
+	float: right;
+	width: 15%;
+}
+.detective div{
+	padding: 10px 0px 0px 0px;
+}
+.rightSidebar-spacer{
+	height:40%;
+}
 .content{
 	float: left;
-	width: 80%;
+	width: 65%;
 	min-height: 170px;
 }
 .content div{
@@ -179,18 +189,27 @@ footer p{
 	background-image: url("images/cards/weapons/pistol_card_small.png");
 }
 
-.card.CARD_BACK {
+.CARD_BACK {
 	background-image: url("images/cards/card_back_small.png");
 }
-.cardquarter {
-	
-}
-.cardquarter.CARD_BACK {
-	background-image: url("images/cards/card_back_small.png");
+.caseFileCards{
+	width: 100%;
+	padding: 5px 0px 0px 0px;
 }
 .CASE_FILE{
 	background-image: url("images/etc/case_file_small.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 50%;
+    height: 0px;
+    padding-top: 40% !important;
+    margin: 5px 0px 0px 0px;
 }
 .notes {
 	background-image: url("images/etc/detective_notes_small.png");
+	background-repeat: no-repeat;
+    background-size: contain;
+	padding-top: 100%;
+    width: 100%;
+    height: 20%;
 }
