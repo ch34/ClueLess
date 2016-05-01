@@ -93,7 +93,8 @@ footer p{
 }
 .playerHand {
 	
-}
+}	
+
 .room {
 	background-size: 100%;
 	background-repeat: no-repeat;
@@ -102,6 +103,12 @@ footer p{
 	float: left;
 	margin: 0px;
 	padding: 0px !important;
+}
+.room.hall_vertical {
+	background-image: url("images/hall_vertical.png");
+}
+.room.hall_horizontal {
+	background-image: url("images/hall_horizontal.png");
 }
 .room.ball_room {
 	background-image: url("images/room_ball_room.png");
