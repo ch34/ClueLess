@@ -28,6 +28,16 @@ var stompClient;
 var playerId = "${clientId}";
 var character;   // the suspect the client will be playing
 var gameId; // set after the client successfully joins a game
+var gameName;
+
+var characterMap = {
+	MISS_SCARLET: 'Miss Scarlet',
+	MRS_PEACOCK: 'Mrs. Peacock',
+	MRS_WHITE: 'Mrs. White',
+	PROFESSOR_PLUM: 'Professor Plum',
+	COLONEL_MUSTARD: 'Colonel Mustard',
+	MR_GREEN: 'Mr. Green'
+}
 
 //This class mimics the JAVA class
 //function names must match those of the Java class
@@ -76,12 +86,9 @@ $(document).ready(this.selectGame);
 		<div class="title">
 			<h1>ClueLess</h1>
 		</div>
-		<div class="subTitle">
-			Player ID: <span id="currentPlayerId"></span>
-			<div id="gameInfo">
-				Current Game: <span id="currentGameId"></span><br/>
-				My Character: <span id="selectedSuspect"></span>
-			</div>
+		<div id="gameInfo" class="subTitle">
+			<span id="gameName"></span><br/>
+			<span id="selectedSuspect"></span>
 		</div>
 	</header>
 	<div class="clearfix">

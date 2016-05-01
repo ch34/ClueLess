@@ -77,8 +77,6 @@ function disconnect() {
 	// hide gameInfo section
 	$("#gameInfo").hide();
 	$("#selectedSuspect").html("");
-	$("#currentGameId").html("");
-	$("#gameInfo").hide();
 	
  	if (stompClient){
  		stompClient.disconnect();
@@ -302,6 +300,7 @@ function joinGame(){
 	character = myCharacter;
 
 	gameId = $("#gameList").val();
+	gameName = $("#gameList option:selected").text();
 	// double check to make sure the selection list was not empty
 	if ( null == gameId || gameId == ""){
 		updateChatArea("Sorry, please select a game first", 'error');
@@ -324,8 +323,8 @@ function joinGame(){
 			clientChatAction.setGameId(gameId);
 			clientEndTurnAction.setGameId(gameId);
 
-			$("#selectedSuspect").append(character);
-			$("#currentGameId").append(gameId);
+			$("#selectedSuspect").append(characterMap[character]);
+			$("#gameName").append(gameName);
 			$("#gameInfo").show();
 		},
 		error: function(result){

@@ -81,6 +81,10 @@ input#gameNameInput {
 	min-width: 200px;
 }
 
+#gameName {
+	font-size: 16px;
+}
+
 .title{
 	float:left;
 }
