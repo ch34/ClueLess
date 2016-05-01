@@ -11,6 +11,7 @@
 <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
 <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 <script src="resources/clueless.js"></script>
+<script src="resources/gameboard.js"></script>
 <script type="text/javascript">
 
 // Globals
@@ -70,7 +71,7 @@ $(document).ready(this.selectGame);
 
 </script>
 </head>
-<body>
+<body onload="draw();">
 <div class="container">
 	<header>
 		<div class="title">
@@ -105,7 +106,7 @@ $(document).ready(this.selectGame);
 		    </div>
 			<div class="gameBoard">
 			  <h2>Welcome to ClueLess</h2>
-			  <p>Game Board Here</p>
+			  <p><canvas id="canvas" width="500" height="500"></canvas></p>
 			  <div id="toolbar" class="ui-widget-header ui-corner-all">
     			<span id="buttonsMove">
      			  <button id="moveLeft" onclick='actionMove("Left");'></button>

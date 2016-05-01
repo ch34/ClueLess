@@ -482,6 +482,14 @@ responseActionMap = {};
 responseActionMap.move = function(msg){
 	// TODO do something with the response
 	window.console.log("Move Response: " + msg);
+	//Move pawn for certain player using their game ID
+	//check if this is my player ID then update my location using setLocation()
+	//movePawn(PlayerID)
+	//if(msg.getPlayerId() == playerId)
+	//{
+	//  var loc = msg.getLocation();	
+	//	setLocation(msg.setLocation(loc.x, loc.y));
+	//}
 }
 
 responseActionMap.accuse = function(msg){
