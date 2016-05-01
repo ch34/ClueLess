@@ -86,6 +86,8 @@ $(document).ready(this.selectGame);
 		<div class="title">
 			<h1>ClueLess</h1>
 		</div>
+		<div class="logo">
+		</div>
 		<div id="gameInfo" class="subTitle">
 			<span id="gameName"></span><br/>
 			<span id="selectedSuspect"></span>
@@ -187,7 +189,6 @@ $(document).ready(this.selectGame);
 		<div class="detective">
 			<div class="rightSidebar-spacer"></div>
 			<div class="CASE_FILE"></div>
-			<div class="card CARD_BACK"></div>
 		</div>
 	</div>
 	<footer>
