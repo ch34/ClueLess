@@ -1,7 +1,9 @@
 #buttonsMove button {
 	width: 20px !important;
 }
-
+#conversationDiv textarea{
+	margin: 0 0 5px 0;
+}
 #toolbar {
     padding: 4px;
     display: inline-block;
@@ -25,12 +27,12 @@ header h1{
 }
 .sidebar{
 	float: left; 
-	width: 20%;
+	width: 20%; 
 	min-height: 170px;
 	background-color: #bbd2df;
 }
 .sidebar #chatArea{
-	padding: 10px 5px 5px 10px;
+	padding: 10 5 5 10
 }
 .detective{
 	float: right;
@@ -65,43 +67,23 @@ footer p{
 	text-align: center; 
 	margin: 5px;
 }
-#notifications {
+.sidebar textarea{
 	width: 95%;
 	height: 60%;
 	margin-bottom: 5px;
 	resize: vertical;
-	overflow-y: auto;
-	background-color: white;
 }
 #chatInput input{
 	width: 70%;
 }
-
-input#gameNameInput {
-	min-width: 200px;
-}
-
-#gameName {
-	font-size: 16px;
-}
-
 .title{
 	float:left;
-	display:none
 }
 .subTitle{
 	float:right;
 }
 .headerSub{
 	minHeight: 4em;
-}
-.logo{
-	float:left;
-	background-image: url("images/logo_small.png");
-	background-repeat: no-repeat;
-	background-size: 100%;
-	width: 150px;
-	height: 44px;
 }
 .gameBoard {
 
@@ -111,6 +93,42 @@ input#gameNameInput {
 }
 .playerHand {
 	
+}
+.room {
+	background-size: 100%;
+	background-repeat: no-repeat;
+	height: 150px;
+	width: 150px;
+	float: left;
+	margin: 0px;
+	padding: 0px !important;
+}
+.room.ball_room {
+	background-image: url("images/room_ball_room.png");
+}
+.room.billiard_room {
+	background-image: url("images/room_billiard_room.png");
+}
+.room.conservatory {
+	background-image: url("images/room_conservatory.png");
+}
+.room.dining_room {
+	background-image: url("images/room_dining_room.png");
+}
+.room.hall {
+	background-image: url("images/room_hall.png");
+}
+.room.kitchen {
+	background-image: url("images/room_kitchen.png");
+}
+.room.library {
+	background-image: url("images/room_library.png");
+}
+.room.lounge {
+	background-image: url("images/room_lounge.png");
+}
+.room.study {
+	background-image: url("images/room_study.png");
 }
 
 .card {
@@ -215,10 +233,10 @@ input#gameNameInput {
 	padding: 5px 0px 0px 0px;
 }
 .CASE_FILE{
-	background-image: url("images/etc/case_file_small_cards.png");
+	background-image: url("images/etc/case_file_small.png");
     background-repeat: no-repeat;
     background-size: contain;
-    width: 100%;
+    width: 50%;
     height: 0px;
     padding-top: 40% !important;
     margin: 5px 0px 0px 0px;
@@ -230,12 +248,4 @@ input#gameNameInput {
 	padding-top: 100%;
     width: 100%;
     height: 20%;
-}
-
-#notifications .error {
-	color: red;
-}
-
-#notifications .update {
-	color: gray;
 }
