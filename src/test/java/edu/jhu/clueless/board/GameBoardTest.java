@@ -55,7 +55,7 @@ public class GameBoardTest {
 	@Test(expected = CluelessException.class)
 	public void testNoMoveHallway() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point home = new Point(4, 3);
+		Point home = new Point(4, 1);
 
 		try {
 			board.move(Suspect.COLONEL_MUSTARD, home);
@@ -69,8 +69,8 @@ public class GameBoardTest {
 	@Test(expected = CluelessException.class)
 	public void testMoveOccupiedHallway() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point lounge = new Point(4, 4);
-		Point occupiedHallway = new Point(3, 4);
+		Point lounge = new Point(4, 0);
+		Point occupiedHallway = new Point(3, 0);
 
 		board.move(Suspect.COLONEL_MUSTARD, lounge);
 
@@ -86,8 +86,8 @@ public class GameBoardTest {
 	@Test
 	public void testValidHallToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point home = new Point(4, 3);
-		Point lounge = new Point(4, 4);
+		Point home = new Point(4, 1);
+		Point lounge = new Point(4, 0);
 
 		board.move(Suspect.COLONEL_MUSTARD, lounge);
 		assertTrue(board.gameSquares.get(home).isAvailable());
@@ -110,8 +110,8 @@ public class GameBoardTest {
 	@Test
 	public void testValidRoomToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point lounge = new Point(4, 4);
-		Point conservatory = new Point(0, 0);
+		Point lounge = new Point(4, 0);
+		Point conservatory = new Point(0, 4);
 
 		board.move(Suspect.COLONEL_MUSTARD, lounge);
 
@@ -123,7 +123,7 @@ public class GameBoardTest {
 	public void testInvalidRoomToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
 		Point diningRoom = new Point(4, 2);
-		Point conservatory = new Point(0, 0);
+		Point conservatory = new Point(0, 4);
 
 		board.move(Suspect.COLONEL_MUSTARD, diningRoom);
 
@@ -138,7 +138,7 @@ public class GameBoardTest {
 	@Test(expected = CluelessException.class)
 	public void testInvalidHallToHall() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point home = new Point(4, 3);
+		Point home = new Point(4, 1);
 		Point hallway = new Point(3, 2);
 
 		try {
@@ -154,8 +154,8 @@ public class GameBoardTest {
 	@Test(expected = CluelessException.class)
 	public void testInvalidHallToRoom() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point home = new Point(4, 3);
-		Point kitchen = new Point(4, 0);
+		Point home = new Point(4, 1);
+		Point kitchen = new Point(4, 4);
 
 		try {
 			board.move(Suspect.COLONEL_MUSTARD, kitchen);
@@ -169,7 +169,7 @@ public class GameBoardTest {
 	@Test
 	public void testValidMoveTriggeredBySuggestion() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point home = new Point(4, 3);
+		Point home = new Point(4, 1);
 		Point library = new Point(0, 2);
 
 		board.move(Suspect.COLONEL_MUSTARD, library, true);
@@ -180,7 +180,7 @@ public class GameBoardTest {
 	@Test(expected = CluelessException.class)
 	public void testInvalidMoveTriggeredBySuggestion() throws CluelessException {
 		GameBoard board = new GameBoard();
-		Point home = new Point(4, 3);
+		Point home = new Point(4, 1);
 		Point hallway = new Point(3, 2);
 
 		try {
