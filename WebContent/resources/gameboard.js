@@ -1,3 +1,4 @@
+// global variables
 var ctx;
 var roomWidth = 100;
 var roomHeight = 100;
@@ -5,6 +6,13 @@ var hallWidth = roomWidth*0.3;
 var hallHeight = roomHeight*0.3;
 var canvasWidth = roomWidth*5;
 var canvasHeight = roomHeight*5;
+
+var greenPawn = new Image();
+var mustardPawn = new Image();
+var peacockPawn = new Image();
+var plumPawn = new Image();
+var scarletPawn = new Image();
+var whitePawn = new Image();
 
 
 var gameSquares = {
@@ -123,6 +131,58 @@ var gameSquares = {
 		y: gameSquares.Center_Y.y*0.5 + gameSquares.Center_Y.y
 	}
  };
+ 
+ var pawns = {
+	Green:{
+		suspect: "MR_GREEN",
+		image: "resources/images/pieces/green_pawn.png",
+		defaultLocation:{
+			x: 1,
+			y: 0
+		}
+	},
+	Mustard: {
+		suspect: "COLONEL_MUSTARD",
+		image: "resources/images/pieces/mustard_pawn.png",
+		defaultLocation:{
+			x: 4,
+			y: 3
+		}
+	},
+	Peacock: {
+		suspect: "MRS_PEACOCK",
+		image: "resources/images/pieces/peacock_pawn.png",
+		defaultLocation:{
+			x: 0,
+			y: 1
+		}
+	},
+	Plum: {
+		suspect: "PROFESSOR_PLUM",
+		image: "resources/images/pieces/plum_pawn.png",
+		defaultLocation:{
+			x: 0,
+			y: 3
+		}
+	},
+	Scarlet: {
+		suspect: "MISS_SCARLET",
+		image: "resources/images/pieces/scarlett_pawn.png",
+		defaultLocation:{
+			x: 3,
+			y: 4
+		}
+	},
+	White: {
+		suspect: "MRS_WHITE",
+		image: "resources/images/pieces/white_pawn.png",
+		defaultLocation:{
+			x: 3,
+			y: 0
+		}
+	}
+ };
+	
 
 function draw() {
   ctx = document.getElementById('canvas').getContext('2d');
@@ -146,10 +206,49 @@ function draw() {
   }
   //alert("Center of canvas is: " + gameSquares.Center_X.x + ", " + gameSquares.Center_Y.y);
   //alert("The location of Hall 1 x,y is: " + halls.Hall_1.x + ", " + halls.Hall_1.y);
-  drawCircle(rooms.Kitchen.x, rooms.Kitchen.y);
+  //drawCircle(rooms.Kitchen.x, rooms.Kitchen.y);
   //drawCircle(55, rooms.Library.y);
-  drawCircle(halls.Hall_12.x, halls.Hall_12.y);
+  //drawCircle(halls.Hall_12.x, halls.Hall_12.y);
+  drawPawn();
   
+}
+
+function drawPawn(){
+	//drawing green pawn
+	greenPawn.onload = function () {
+		ctx.drawImage(greenPawn, pawns.Green.defaultLocation.x, pawns.Green.defaultLocation.y);
+	}
+	greenPawn.src = pawns.Green.image;
+	
+	//drawing mustard pawn
+	mustardPawn.onload = function () {
+		ctx.drawImage(mustardPawn, pawns.Mustard.defaultLocation.x, pawns.Mustard.defaultLocation.y, 40, 40);
+	}
+	mustardPawn.src = pawns.Mustard.image;
+	
+	//drawing peacock pawn
+	peacockPawn.onload = function () {
+		ctx.drawImage(peacockPawn, pawns.Peacock.defaultLocation.x, pawns.Peacock.defaultLocation.y);
+	}
+	peacockPawn.src = pawns.Peacock.image;
+	
+	//drawing plum pawn
+	plumPawn.onload = function () {
+		ctx.drawImage(plumPawn, pawns.Plum.defaultLocation.x, pawns.Plum.defaultLocation.y);
+	}
+	plumPawn.src = pawns.Plum.image;
+	
+	//drawing scarllet pawn
+	scarletPawn.onload = function () {
+		ctx.drawImage(scarletPawn, pawns.Scarlet.defaultLocation.x, pawns.Scarlet.defaultLocation.y);
+	}
+	scarletPawn.src = pawns.Scarlet.image;
+	
+	//drawing white pawn
+	whitePawn.onload = function () {
+		ctx.drawImage(whitePawn, pawns.White.defaultLocation.x, pawns.White.defaultLocation.y);
+	}
+	whitePawn.src = pawns.White.image;
 }
 
 // this function will be used to move pawn for different players
@@ -163,5 +262,3 @@ function drawCircle(x, y){
 	ctx.arc(x,y,10,0,2*Math.PI);
 	ctx.stroke();
 }
-
-draw();
