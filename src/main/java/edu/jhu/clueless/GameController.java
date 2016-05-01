@@ -101,30 +101,26 @@ public class GameController {
 	 */
 	@RequestMapping(value = "home/getGames")
 	@ResponseBody
-	public String[] getAvailableGames(){
-		List<String> availableGames = new ArrayList<>();
+	public Map<String, String> getAvailableGames(){
+		Map<String, String> availableGames = new HashMap<>();
 		for (Game game : reg.getGames()) {
 			if (!game.isActive() && game.getWinner() == null && game.getPlayers().size() < 6) {
-				availableGames.add(game.getId());
+				availableGames.put(game.getId(), game.getName());
 			}
 		}
-		return availableGames.toArray(new String[availableGames.size()]);
+		return availableGames;
 	}
 	
 	/**
 	 * Create a new game
 	 * 
-	 * @param id
+	 * @param name
 	 * @return
 	 */
 	@RequestMapping(value = "home/createGame") 
 	@ResponseBody
-	public ResponseEntity<String> createGame(@RequestParam(name="id", required = false) String id){
-		if (id != null && reg.get(id) != null) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					String.format("Game with ID=%s already exists", id));
-		}
-		Game game = id == null ? new Game("New game") : new Game(id, "New game");
+	public ResponseEntity<String> createGame(@RequestParam(name="name", required = false) String name){
+		Game game = name == null ? new Game("New game") : new Game(name);
 		this.reg.add(game);
 		return ResponseEntity.ok(game.getId());
 	}
@@ -163,7 +159,7 @@ public class GameController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
 		}
 
-		String message = getDisplayCharFromPlayer(game, playerId) + " has joined the session.";
+		String message = getDisplayCharFromPlayer(game, playerId) + " has joined the game.";
 		sendGameMessageAllPlayers(gameId, message);
 		
 		// lastly - add the gameid to the players session only
