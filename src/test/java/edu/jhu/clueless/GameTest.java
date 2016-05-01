@@ -129,14 +129,14 @@ public class GameTest {
 	public void testValidMove() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 	}
 
 	@Test(expected = CluelessException.class)
 	public void testMoveGameNotStarted() throws CluelessException {
 		Game game = new Game();
 		String scarlet = game.addPlayer(Suspect.MISS_SCARLET);
-		game.move(game.getPlayer(scarlet), new Point(4, 4));
+		game.move(game.getPlayer(scarlet), new Point(4, 0));
 	}
 
 	@Test(expected = CluelessException.class)
@@ -146,29 +146,29 @@ public class GameTest {
 		game.accuse(scarlet, game.getCaseFile().values());
 
 		Player mustard = game.players.get(Suspect.COLONEL_MUSTARD);
-		game.move(mustard, new Point(4, 4));
+		game.move(mustard, new Point(4, 0));
 	}
 
 	@Test(expected = CluelessException.class)
 	public void testMoveOutOfTurn() throws CluelessException {
 		Game game = createAndStartGame();
 		Player mustard = game.players.get(Suspect.COLONEL_MUSTARD);
-		game.move(mustard, new Point(4, 4));
+		game.move(mustard, new Point(4, 0));
 	}
 
 	@Test(expected = CluelessException.class)
 	public void testInvalidDoubleMove() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
-		game.move(scarlet, new Point(3, 4));
+		game.move(scarlet, new Point(4, 0));
+		game.move(scarlet, new Point(3, 0));
 	}
 
 	@Test
 	public void testValidSuggestion() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		game.suggest(scarlet, new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Room.LOUNGE,
 				Weapon.CANDLESTICK)));
 	}
@@ -185,7 +185,7 @@ public class GameTest {
 	public void testInvalidSuggestion() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		game.suggest(scarlet, new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Suspect.PROFESSOR_PLUM,
 				Weapon.CANDLESTICK)));
 	}
@@ -194,7 +194,7 @@ public class GameTest {
 	public void testSuggestionWrongRoom() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		game.suggest(scarlet, new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Room.KITCHEN,
 				Weapon.CANDLESTICK)));
 	}
@@ -243,7 +243,7 @@ public class GameTest {
 	public void testValidResponse() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		Set<Card> suggestion =  new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Room.LOUNGE,
 				Weapon.CANDLESTICK));
 		game.suggest(scarlet, suggestion);
@@ -271,7 +271,7 @@ public class GameTest {
 	public void testRespondOutOfTurn() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		Set<Card> suggestion =  new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Room.LOUNGE,
 				Weapon.CANDLESTICK));
 		game.suggest(scarlet, suggestion);
@@ -292,7 +292,7 @@ public class GameTest {
 	public void testInvalidResponse() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		Set<Card> suggestion =  new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Room.LOUNGE,
 				Weapon.CANDLESTICK));
 		game.suggest(scarlet, suggestion);
@@ -317,7 +317,7 @@ public class GameTest {
 		Player mustard = game.players.get(Suspect.COLONEL_MUSTARD);
 		Player plum = game.players.get(Suspect.PROFESSOR_PLUM);
 
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		Set<Card> suggestion = new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Room.LOUNGE,
 				Weapon.CANDLESTICK));
 		game.suggest(scarlet, suggestion);
@@ -330,7 +330,7 @@ public class GameTest {
 	public void testEndTurnValid() throws CluelessException {
 		Game game = createAndStartGame();
 		Player scarlet = game.players.get(Suspect.MISS_SCARLET);
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		game.endTurn(scarlet);
 	}
 
@@ -341,7 +341,7 @@ public class GameTest {
 		Player mustard = game.players.get(Suspect.COLONEL_MUSTARD);
 		Player plum = game.players.get(Suspect.PROFESSOR_PLUM);
 
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		Set<Card> suggestion = new HashSet<>(Arrays.asList(Suspect.MRS_PEACOCK, Room.LOUNGE,
 				Weapon.CANDLESTICK));
 		game.suggest(scarlet, suggestion);
@@ -362,7 +362,7 @@ public class GameTest {
 		Player mustard = game.players.get(Suspect.COLONEL_MUSTARD);
 		Player plum = game.players.get(Suspect.PROFESSOR_PLUM);
 
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		Set<Card> suggestion = new HashSet<>(Arrays.asList(Suspect.COLONEL_MUSTARD, Room.LOUNGE,
 				Weapon.CANDLESTICK));
 		game.suggest(scarlet, suggestion);
@@ -388,7 +388,7 @@ public class GameTest {
 		Player mustard = game.players.get(Suspect.COLONEL_MUSTARD);
 		Player plum = game.players.get(Suspect.PROFESSOR_PLUM);
 
-		game.move(scarlet, new Point(4, 4));
+		game.move(scarlet, new Point(4, 0));
 		Set<Card> suggestion = new HashSet<>(Arrays.asList(Suspect.COLONEL_MUSTARD, Room.LOUNGE,
 				Weapon.CANDLESTICK));
 		game.suggest(scarlet, suggestion);
