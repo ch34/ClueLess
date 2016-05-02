@@ -135,7 +135,7 @@ input#gameNameInput {
 .room.hall_horizontal {
 	background-image: url("images/hall_horizontal.png");
 }
-#boardGrid td#BALL_ROOM {
+#boardGrid td#BALLROOM {
 	background-image: url("images/room_ball_room.png");
 }
 #boardGrid td#BILLIARD_ROOM {
@@ -317,6 +317,10 @@ input#gameNameInput {
 
 #notifications .update {
 	color: gray;
+}
+
+#notifications .response {
+	color: blue;
 }
 
 #boardGrid td {

@@ -131,18 +131,10 @@ function actionMove(direction) {
 }
 
 function actionSuggest(){
-	// first check to make sure client is in a room
-	var loc = clientSuggestAction.getLocation();
-	var inRoom = isPlayerInRoom(loc.x,loc.y);
-	if(!inRoom){
-		updateChatArea("Sorry, you must be in a room", 'error');
-		console.log("location is [" + loc.x + ":" + loc.y + "]");
-		return;
-	}
 	var cards = [];
 	cards.push( selectSuspect() );
 	cards.push( selectWeapon() );
-	cards.push(getClientsRoomName(loc.x, loc.y) );
+	cards.push(coordsToSquare[playerLocation.x + ',' + playerLocation.y]);
 	clientSuggestAction.setCards(cards);
 	sendAction(clientSuggestAction);
 	hideAllCardInput();
@@ -230,8 +222,12 @@ function showResponseSelection() {
 	$("#responseInput").show();
 }
 
-function actionRespondSuggest(){
-	clientRespondAction.setCards([ $("#responseList").val() ]);
+function actionRespondSuggest(disproving){
+	if (disproving) {
+		clientRespondAction.setCards([ $("#responseList").val() ]);
+	} else {
+		clientRespondAction.setCards(null);
+	}
 	sendAction(clientRespondAction);
 	hideAllCardInput();
 }
@@ -247,7 +243,7 @@ function selectRoom() {
  * selects a suspect
  */
 function selectSuspect() {
-	return $("#characters").val();
+	return $("#suspects").val();
 }
 
 /**
@@ -472,7 +468,9 @@ responseActionMap.accuse = function(msg){
 }
 
 responseActionMap.respondsuggest = function(msg){
-	// TODO do something with the response
+	if (msg.cards && msg.cards.length > 0) {
+		updateChatArea(msg.message, 'response');
+	}
 }
 
 responseActionMap.chat = function(msg){

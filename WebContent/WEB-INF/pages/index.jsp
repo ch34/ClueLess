@@ -250,7 +250,8 @@ $(document).ready(this.selectGame);
 					<select id="responseList">
 						<option value="" disabled selected>Select card</option>
 					</select>
-					<button id="respondBtn" type="button" onclick="actionRespondSuggest();">OK</button>
+					<button type="button" onclick="actionRespondSuggest(true);">Disprove</button>
+					<button type="button" onclick="actionRespondSuggest(false);">Cannot disprove</button>
 				</div>
 				<div class="playerHand" id="playerHand"></div>
 			</div>

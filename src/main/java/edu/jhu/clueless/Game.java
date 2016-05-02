@@ -72,6 +72,17 @@ public class Game {
 		allowedActions = new HashMap<>();
 	}
 
+	public boolean isSusggestionInProgress() {
+		return currentSuggestion != null;
+	}
+
+	public Suspect getPlayerResponseTurn() {
+		if (currentSuggestion == null) {
+			return null;
+		}
+		return SUSPECT_ORDER[indexPlayerResponding];
+	}
+
 	/**
 	 * @throws CluelessException if there are not sufficient players to start the game
 	 */
@@ -335,7 +346,7 @@ public class Game {
 
 		// If we've wrapped back around to the original suggester, the response cycle is over, and the main turn
 		// cycle continues
-		if (indexPlayerResponding == indexPlayerTurn) {
+		if (response != null || indexPlayerResponding == indexPlayerTurn) {
 			currentSuggestion = null;
 			return false;
 		}

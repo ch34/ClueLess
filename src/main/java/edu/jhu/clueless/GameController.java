@@ -270,8 +270,10 @@ public class GameController {
 			return;
 		}
 
-		String message = getDisplayCharFromPlayer(game, playerId) + " suggested " + String.join(",", cardToStringList(suggestion));
+		String message = getDisplayCharFromPlayer(game, playerId) + " suggested " + String.join(", ", cardToStringList(suggestion));
 		sendGameMessageAllPlayers(gameId, message);
+		sendGameMessageAllPlayers(gameId, "It is " + game.getPlayerResponseTurn().toString().toLowerCase()
+				+ "'s turn to respond");
 	}
 
 	private List<String> cardToStringList(Collection<Card> cardCollection) {
@@ -300,23 +302,37 @@ public class GameController {
 		Player player = game.getPlayer(client.getPlayerId());
 
 		Set<String> cards = client.getCards();
-		String responseName;
-		if (cards.size() != 1) {
+		if (cards != null && cards.size() != 1) {
 			sendMessageToUser(playerId, "Invalid response: must include only a single card");
 			return;
-		} else {
-			responseName = cards.iterator().next();
 		}
 
 		try {
-			Card response = parseCard(normalizeConstant(responseName));
+			Card response = cards == null ? null : parseCard(normalizeConstant(cards.iterator().next()));
 			game.respond(player, response);
 		} catch (CluelessException e) {
 			sendMessageToUser(playerId, e.getMessage());
 			return;
 		}
 
-		sendGameMessageAllPlayers(client.getGameId(), client);
+		String messageForSuggester = null;
+		String playerDisplayName = getDisplayCharFromPlayer(game, playerId);
+		if (cards == null) {
+			sendGameMessageAllPlayers(gameId, playerDisplayName + " was unable to disprove suggestion");
+		} else {
+			sendGameMessageAllPlayers(gameId, playerDisplayName + " was able to disprove suggestion. " +
+					"Response cycle over");
+			messageForSuggester = playerDisplayName + " responded with " + cards.iterator().next();
+		}
+		if (game.isSusggestionInProgress()) {
+			sendGameMessageAllPlayers(gameId, "It is " + game.getPlayerResponseTurn().toString().toLowerCase()
+					+ "'s turn to respond");
+		} else if (cards == null) {
+			sendGameMessageAllPlayers(gameId, "No one was able to disprove the suggestion. Response cycle over");
+		}
+
+		client.setMessage(messageForSuggester);
+		sendMessageToUser(game.getPlayerTurn().getID(), client);
 	}
 	
 	/**
