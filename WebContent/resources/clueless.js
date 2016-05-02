@@ -523,6 +523,35 @@ responseActionMap.set_hand = function(msg){
 responseActionMap.main_turn = function(msg){
 	$("#toolbar :button:not(#respond)").prop("disabled", false);
 	$("#buttonsMove :button").removeClass("ui-button-disabled ui-state-disabled");
+
+	var x = playerLocation.x;
+	var y = playerLocation.y;
+
+	if (!coordsToSquare[x-1 + ',' + y]) {
+		$("#moveLeft").prop("disabled", true);
+		$("#moveLeft").addClass("ui-button-disabled ui-state-disabled");
+	}
+	if (!coordsToSquare[x+1 + ',' + y]) {
+		$("#moveRight").prop("disabled", true);
+		$("#moveRight").addClass("ui-button-disabled ui-state-disabled");
+	}
+	var possibleY = y - 1;
+	if (!coordsToSquare[x + ',' + possibleY]) {
+		$("#moveDown").prop("disabled", true);
+		$("#moveDown").addClass("ui-button-disabled ui-state-disabled");
+	}
+	possibleY = y + 1;
+	if (!coordsToSquare[x + ',' + possibleY]) {
+		$("#moveUp").prop("disabled", true);
+		$("#moveUp").addClass("ui-button-disabled ui-state-disabled");
+	}
+
+	var currentRoom = coordsToSquare[x + ',' + y];
+	if (!secretPassageMap[currentRoom]) {
+		$("#movePassage").prop("disabled", true);
+		$("#movePassage").addClass("ui-button-disabled ui-state-disabled");
+	}
+
 }
 
 responseActionMap.end_turn = function(msg){
