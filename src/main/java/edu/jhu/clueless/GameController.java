@@ -261,15 +261,25 @@ public class GameController {
 		}
 
 		Player player = game.getPlayer(client.getPlayerId());
+		Set<Card> suggestion;
 		try {
-			Set<Card> suggestion = buildProposal(client.getCards());
+			suggestion = buildProposal(client.getCards());
 			game.suggest(player, suggestion);
 		} catch (CluelessException e) {
 			sendMessageToUser(playerId, e.getMessage());
 			return;
 		}
 
-		sendMessageToUser(client.getPlayerId(), client);
+		String message = getDisplayCharFromPlayer(game, playerId) + " suggested " + String.join(",", cardToStringList(suggestion));
+		sendGameMessageAllPlayers(gameId, message);
+	}
+
+	private List<String> cardToStringList(Collection<Card> cardCollection) {
+		List<String> stringList = new ArrayList<>();
+		for (Object object : cardCollection) {
+			stringList.add(object.toString());
+		}
+		return stringList;
 	}
 
 	/**
@@ -326,14 +336,17 @@ public class GameController {
 
 		Player player = game.getPlayer(client.getPlayerId());
 		boolean gameWon;
+		Set<Card> accusation;
 		try {
-			Set<Card> accusation = buildProposal(client.getCards());
+			accusation = buildProposal(client.getCards());
 			gameWon = game.accuse(player, accusation);
 		} catch (CluelessException e) {
 			sendMessageToUser(playerId, e.getMessage());
 			return;
 		}
 
+		String message = getDisplayCharFromPlayer(game, playerId) + " accused " + String.join(",", cardToStringList(accusation));
+		sendGameMessageAllPlayers(gameId, message);
 		if (gameWon) {
 			sendGameMessageAllPlayers(client.getGameId(), client);
 			reg.remove(gameId);

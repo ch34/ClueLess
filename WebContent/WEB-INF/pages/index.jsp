@@ -29,6 +29,8 @@ var playerId = "${clientId}";
 var character;   // the suspect the client will be playing
 var gameId; // set after the client successfully joins a game
 var gameName;
+var playerHand;
+var playerLocation;
 
 var characterMap = {
 	MISS_SCARLET: 'Miss Scarlet',
@@ -38,6 +40,34 @@ var characterMap = {
 	COLONEL_MUSTARD: 'Colonel Mustard',
 	MR_GREEN: 'Mr. Green'
 }
+
+var coordsToSquare = {
+	'0,0': 'CONSERVATORY',
+	'1,0': 'HALL1',
+	'2,0': 'BALLROOM',
+	'3,0': 'HALL2',
+	'4,0': 'KITCHEN',
+
+	'0,1': 'HALL3',
+	'2,1': 'HALL4',
+	'4,1': 'HALL5',
+
+	'0,2': 'LIBRARY',
+	'1,2': 'HALL6',
+	'2,2': 'BILLIARD_ROOM',
+	'3,2': 'HALL7',
+	'4,2': 'DINING_ROOM',
+
+	'0,3': 'HALL8',
+	'2,3': 'HALL9',
+	'4,3': 'HALL10',
+
+	'0,4': 'STUDY',
+	'1,4': 'HALL11',
+	'2,4': 'HALL',
+	'3,4': 'HALL12',
+	'4,4': 'LOUNGE'
+};
 
 //This class mimics the JAVA class
 //function names must match those of the Java class
@@ -127,8 +157,43 @@ $(document).ready(this.selectGame);
 				<button type="button" id="disconnect" onclick="disconnect();">Leave Game</button>
 			</div>
 			<div id="activeGame">
-				<div class="gameBoard">
-					<p>Game Board Here</p>
+				<table id="boardGrid">
+					<tr>
+						<td id="STUDY">Study</td>
+						<td id="HALL11" class="hallway"></td>
+						<td id="HALL">Hall</td>
+						<td id="HALL12" class="hallway"><div class="pawn" id="MISS_SCARLET"></div></td>
+						<td id="LOUNGE">Lounge</td>
+					</tr>
+					<tr>
+						<td id="HALL8" class="hallway"><div class="pawn" id="PROFESSOR_PLUM"></div></td>
+						<td class="empty"></td>
+						<td id="HALL9" class="hallway"></td>
+						<td class="empty"></td>
+						<td id="HALL10" class="hallway"><div class="pawn" id="COLONEL_MUSTARD"></div></td>
+					</tr>
+					<tr>
+						<td id="LIBRARY">Library</td>
+						<td id="HALL6" class="hallway"></td>
+						<td id="BILLIARD_ROOM">Billiard room</td>
+						<td id="HALL7" class="hallway"></td>
+						<td id="DINING_ROOM">Dining Room</td>
+					</tr>
+					<tr>
+						<td id="HALL3" class="hallway"><div class="pawn" id="MRS_PEACOCK"></div></td>
+						<td class="empty"></td>
+						<td id="HALL4" class="hallway"></td>
+						<td class="empty"></td>
+						<td id="HALL5" class="hallway"></td>
+					</tr>
+					<tr>
+						<td id="CONSERVATORY">Conservatory</td>
+						<td id="HALL1" class="hallway"><div class="pawn" id="MR_GREEN"></div></td>
+						<td id="BALLROOM">Ballroom</td>
+						<td id="HALL2" class="hallway"><div class="pawn" id="MRS_WHITE"></div></td>
+						<td id="KITCHEN">Kitchen</td>
+					</tr>
+					</table>
 					<div id="toolbar" class="ui-widget-header ui-corner-all">
     			<span id="buttonsMove">
      			  <button id="moveLeft" onclick='actionMove("Left");'></button>
@@ -137,16 +202,14 @@ $(document).ready(this.selectGame);
   	 			  <button id="moveDown" onclick='actionMove("Down");'></button>
   				</span>
 						<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
-						<button id="respond" onclick="actionRespondSuggest();">Respond</button>
+						<button id="respond" onclick="showResponseSelection();">Respond</button>
 						<button id="accuse" onclick="showAccuseSelection();">Accuse</button>
 						<button id="endTurn" onclick="actionEndTurn();">End turn</button>
 					</div>
-				</div>
-				<div class="gameCards" id="gameCards">
-					<p>Select your Card(s)</p>
+				<div id="proposalInput">
 				<span id="suspectCards">
-				Suspects
 				<select id="suspects" name="suspects">
+					<option value="" disabled selected>Select a suspect</option>
 					<option value="MISS_SCARLET">Miss Scarlet</option>
 					<option value="MRS_PEACOCK">Mrs. Peacock</option>
 					<option value="MRS_WHITE">Mrs. White</option>
@@ -156,8 +219,8 @@ $(document).ready(this.selectGame);
 				</select>
 				</span>
 				<span id="roomCards">
-				Rooms
 				<select id="rooms" name="rooms">
+					<option value="" disabled selected>Select a room</option>
 					<option value="KITCHEN">Kitchen</option>
 					<option value="STUDY">Study</option>
 					<option value="CONSERVATORY">Conservatory</option>
@@ -170,8 +233,8 @@ $(document).ready(this.selectGame);
 				</select>
 				</span>
 				<span id="weaponCards">
-				Weapons
 				<select id="weapons" name="weapons">
+					<option value="" disabled selected>Select a weapon</option>
 					<option value="CANDLESTICK">Candlestick</option>
 					<option value="ROPE">Rope</option>
 					<option value="KNIFE">Knife</option>
@@ -182,6 +245,12 @@ $(document).ready(this.selectGame);
 				</span>
 					<button id="accuseBtn" type="button" onclick="actionAccuse();">OK</button>
 					<button id="suggestBtn" type="button" onclick="actionSuggest();">OK</button>
+				</div>
+				<div id="responseInput">
+					<select id="responseList">
+						<option value="" disabled selected>Select card</option>
+					</select>
+					<button id="respondBtn" type="button" onclick="actionRespondSuggest();">OK</button>
 				</div>
 				<div class="playerHand" id="playerHand"></div>
 			</div>

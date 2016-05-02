@@ -2,7 +2,7 @@
  * Disables / hides selections on load of the page
  */
 function startup(){
-	hidGameCardSelection();
+	hideAllCardInput();
 	// disable the chat feature on load
 	$("#chatMessage").prop("disabled",true);
 	$("#messageBtn").prop("disabled",true);
@@ -116,10 +116,17 @@ function sendAction(action){
 	stompClient.send('/app/' + action.getAction(), {}, JSON.stringify(action));
 }
 
-function actionMove(direction){
-	// TODO
-	// update direction before sending
-	window.console.log("moving " + direction);
+function actionMove(direction) {
+	var x = playerLocation.x;
+	var y = playerLocation.y;
+	switch (direction) {
+		case 'Left': x = x - 1; break;
+		case 'Right': x = x + 1; break;
+		case 'Up': y = y + 1; break;
+		case 'Down': y = y - 1; break;
+	}
+	clientMoveAction.locationX = x;
+	clientMoveAction.locationY = y;
 	sendAction(clientMoveAction);
 }
 
@@ -138,7 +145,7 @@ function actionSuggest(){
 	cards.push(getClientsRoomName(loc.x, loc.y) );
 	clientSuggestAction.setCards(cards);
 	sendAction(clientSuggestAction);
-	hidGameCardSelection();
+	hideAllCardInput();
 }
 
 
@@ -205,17 +212,28 @@ function actionAccuse(){
 	cards.push( selectRoom() );
 	clientAccuseAction.setCards(cards);
 	sendAction(clientAccuseAction);
-	hidGameCardSelection();
+	hideAllCardInput();
 }
 
 function actionEndTurn(){
 	sendAction(clientEndTurnAction);
 }
 
+function showResponseSelection() {
+	hideAllCardInput();
+
+	$("#responseList option[value!='']").remove();
+	$.each(playerHand, function(index, card){
+		var current = "<option value=" +card + ">" + card + "</option>";
+		$("#responseList").append(current);
+	});
+	$("#responseInput").show();
+}
+
 function actionRespondSuggest(){
-	// TODO
-	// selectCard();
+	clientRespondAction.setCards([ $("#responseList").val() ]);
 	sendAction(clientRespondAction);
+	hideAllCardInput();
 }
 
 /**
@@ -254,7 +272,7 @@ function selectGame(){
 				var current = "<option value=" +index + ">" + item + "</option>";
 				$("#gameList").append(current);
 			});
-			hidGameCardSelection();
+			hideAllCardInput();
 		},
 		error: function(result){
 			alert("Failed to retrieve game list");
@@ -337,7 +355,7 @@ function joinGame(){
 /**
  * Makes a request to the Game to begin
  */
-function startGame(){	
+function startGame(){
 	var startAction = new ClientAction("start");
 	startAction.setGameId(gameId);
 	sendAction(startAction);
@@ -347,10 +365,14 @@ function startGame(){
  * 
  */
 function showSuggestSelection(){
+	hideAllCardInput();
+
 	// we don't need to show a room because
 	// the player must be in a room to make a suggestion
 	// so just grab the room he is in instead of showing it
-	$("#gameCards").show(); // show main section
+	$("#proposalInput").show();
+	$("#roomCards").hide();
+	$("#accuseBtn").hide();
 	$("#suspectCards").show();
 	$("#weaponCards").show();
 	$("#suggestBtn").show();
@@ -360,7 +382,10 @@ function showSuggestSelection(){
  *
  */
 function showAccuseSelection(){
-	$("#gameCards").show(); // show main section
+	hideAllCardInput();
+
+	$("#proposalInput").show();
+	$("#suggestBtn").hide();
 	$("#suspectCards").show();
 	$("#weaponCards").show();
 	$("#roomCards").show();
@@ -370,11 +395,11 @@ function showAccuseSelection(){
 /**
  * 
  */
-function hidGameCardSelection(){
+function hideAllCardInput(){
 	// we hide all elements so when others need to show
 	// only the options they need will be shown
-	$("#gameCards").children().hide();
-	$("#gameCards").hide();
+	$("#proposalInput").hide();
+	$("#responseInput").hide();
 }
 
 /**
@@ -412,8 +437,9 @@ function updateChatArea(msg, type){
 function showPlayersCards(cards){
 	// we start by making sure the area is clear
 	$("#playerHand").empty();
-	
+	playerHand = [];
 	cards.forEach(function(card,index){
+		playerHand.push(card);
 		var newCard = "<div class=\"card " + card + "\"><div>";
 		$("#playerHand").append(newCard);
 	});
@@ -430,7 +456,15 @@ function showPlayersCards(cards){
 // These functions expect a clientAction object as their parameter
 responseActionMap = {};
 responseActionMap.move = function(msg){
-	// TODO do something with the response
+	var suspect = msg.suspect;
+	if (suspect == character) {
+		playerLocation.x = msg.locationX;
+		playerLocation.y = msg.locationY;
+	}
+	var newSquare = coordsToSquare[msg.locationX + ',' + msg.locationY];
+	$("#" + suspect).remove();
+	var newPawnElement = '<div class="pawn" id="' + suspect + '"></div>';
+	$('#'+ newSquare).append(newPawnElement);
 }
 
 responseActionMap.accuse = function(msg){
@@ -464,6 +498,18 @@ responseActionMap.set_hand = function(msg){
 	// so we can verify the data
 	window.console.log(msg);
 	showPlayersCards(msg.cards);
+	initializeCoords();
+}
+
+function initializeCoords() {
+	switch (character) {
+		case 'MISS_SCARLET': playerLocation = {x: 3,y: 4}; break;
+		case 'COLONEL_MUSTARD': playerLocation = {x: 4,y: 3}; break;
+		case 'MR_GREEN': playerLocation = {x: 1,y: 0}; break;
+		case 'PROFESSOR_PLUM': playerLocation = {x: 0,y: 3}; break;
+		case 'MRS_WHITE': playerLocation = {x: 3,y: 0}; break;
+		case 'MRS_PEACOCK': playerLocation = {x: 0,y: 1};
+	}
 }
 
 /**

@@ -85,17 +85,21 @@ footer p{
 .headerSub{
 	minHeight: 4em;
 }
-.gameBoard {
 
+.logo{
+	float:left;
+	background-image: url("images/logo_small.png");
+	background-repeat: no-repeat;
+	background-size: 100%;
+	width: 150px;
+	height: 44px;
 }
-.gameCards {
 
-}
 .playerHand {
 	
-}	
+}
 
-.room {
+#boardGrid td {
 	background-size: 100%;
 	background-repeat: no-repeat;
 	height: 150px;
@@ -104,37 +108,46 @@ footer p{
 	margin: 0px;
 	padding: 0px !important;
 }
+
+#boardGrid td.empty {
+	background-color: inherit;
+}
+
+#boardGrid td.hallway {
+	background-color: rosybrown;
+}
+
 .room.hall_vertical {
 	background-image: url("images/hall_vertical.png");
 }
 .room.hall_horizontal {
 	background-image: url("images/hall_horizontal.png");
 }
-.room.ball_room {
+#boardGrid td#BALL_ROOM {
 	background-image: url("images/room_ball_room.png");
 }
-.room.billiard_room {
+#boardGrid td#BILLIARD_ROOM {
 	background-image: url("images/room_billiard_room.png");
 }
-.room.conservatory {
+#boardGrid td#CONSERVATORY {
 	background-image: url("images/room_conservatory.png");
 }
-.room.dining_room {
+#boardGrid td#DINING_ROOM {
 	background-image: url("images/room_dining_room.png");
 }
-.room.hall {
+#boardGrid td#HALL {
 	background-image: url("images/room_hall.png");
 }
-.room.kitchen {
+#boardGrid td#KITCHEN {
 	background-image: url("images/room_kitchen.png");
 }
-.room.library {
+#boardGrid td#LIBRARY {
 	background-image: url("images/room_library.png");
 }
-.room.lounge {
+#boardGrid td#LOUNGE {
 	background-image: url("images/room_lounge.png");
 }
-.room.study {
+#boardGrid td#STUDY {
 	background-image: url("images/room_study.png");
 }
 
@@ -232,6 +245,31 @@ footer p{
 	background-image: url("images/cards/weapons/pistol_card_small.png");
 }
 
+.pawn {
+	width: 10px;
+	height: 10px;
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+.pawn#MISS_SCARLET {
+	background-image: url("images/pieces/scarlett_pawn.png");
+}
+.pawn#COLONEL_MUSTARD {
+	background-image: url("images/pieces/mustard_pawn.png");
+}
+.pawn#PROFESSOR_PLUM {
+	background-image: url("images/pieces/plum_pawn.png");
+}
+.pawn#MR_GREEN {
+	background-image: url("images/pieces/green_pawn.png");
+}
+.pawn#MRS_WHITE {
+	background-image: url("images/pieces/white_pawn.png");
+}
+.pawn#MRS_PEACOCK {
+	background-image: url("images/pieces/peacock_pawn.png");
+}
+
 .CARD_BACK {
 	background-image: url("images/cards/card_back_small.png");
 }
@@ -255,4 +293,12 @@ footer p{
 	padding-top: 100%;
     width: 100%;
     height: 20%;
+}
+
+#notifications .error {
+	color: red;
+}
+
+#notifications .update {
+	color: gray;
 }
