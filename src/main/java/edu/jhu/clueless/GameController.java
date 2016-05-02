@@ -234,8 +234,6 @@ public class GameController {
 			playersString.add(player.getSuspect().toString().toLowerCase());
 		}
 		sendGameMessageAllPlayers(gameId, "Game has started with " + String.join(", ", playersString));
-		String playerTurn = getDisplayCharFromPlayer(game, game.getPlayerTurn().getID());
-		sendGameMessageAllPlayers(gameId, "It is " + playerTurn + "'s turn");
 
 		// Notify all users of their hand
 		for (Player player : game.getPlayers()) {
@@ -250,6 +248,8 @@ public class GameController {
 		}
 
 		pushLocationUpdateAllPawns(game);
+
+		notifyTurnRotation(game, false, null);
 	}
 	
 	/**
@@ -281,8 +281,8 @@ public class GameController {
 
 		String message = getDisplayCharFromPlayer(game, playerId) + " suggested " + String.join(", ", cardToStringList(suggestion));
 		sendGameMessageAllPlayers(gameId, message);
-		sendGameMessageAllPlayers(gameId, "It is " + game.getPlayerResponseTurn().toString().toLowerCase()
-				+ "'s turn to respond");
+
+		notifyTurnRotation(game, false, null);
 	}
 
 	private List<String> cardToStringList(Collection<Card> cardCollection) {
@@ -324,6 +324,11 @@ public class GameController {
 			return;
 		}
 
+		// Notify responder that their response is over
+		ClientAction notification = new ClientAction();
+		notification.setAction("end_response");
+		sendMessageToUser(player.getID(), notification);
+
 		String messageForSuggester = null;
 		String playerDisplayName = getDisplayCharFromPlayer(game, playerId);
 		if (cards == null) {
@@ -333,15 +338,33 @@ public class GameController {
 					"Response cycle over");
 			messageForSuggester = playerDisplayName + " responded with " + cards.iterator().next();
 		}
-		if (game.isSusggestionInProgress()) {
-			sendGameMessageAllPlayers(gameId, "It is " + game.getPlayerResponseTurn().toString().toLowerCase()
-					+ "'s turn to respond");
-		} else if (cards == null) {
-			sendGameMessageAllPlayers(gameId, "No one was able to disprove the suggestion. Response cycle over");
-		}
 
 		client.setMessage(messageForSuggester);
 		sendMessageToUser(game.getPlayerTurn().getID(), client);
+
+		notifyTurnRotation(game, true, cards);
+	}
+
+	private void notifyTurnRotation(Game game, boolean originResponse, Collection<String> response) {
+		String gameId = game.getId();
+		ClientAction notification = new ClientAction();
+
+		if (originResponse || game.isSusggestionInProgress()) {
+			if (game.isSusggestionInProgress()) {
+				Player player = game.getPlayerResponseTurn();
+				sendGameMessageAllPlayers(gameId, "It is " + player.getSuspect().toString().toLowerCase()
+						+ "'s turn to respond");
+				notification.setAction("response_turn");
+				sendMessageToUser(player.getID(), notification);
+			} else if (response == null) {
+				sendGameMessageAllPlayers(gameId, "No one was able to disprove the suggestion. Response cycle over");
+			}
+		} else {
+			Player player = game.getPlayerTurn();
+			sendGameMessageAllPlayers(gameId, "It is " + player.getSuspect().toString().toLowerCase() + "'s turn");
+			notification.setAction("main_turn");
+			sendMessageToUser(player.getID(), notification);
+		}
 	}
 	
 	/**
@@ -383,8 +406,10 @@ public class GameController {
 				reg.remove(gameId);
 			} else {
 				pushLocationUpdateAllPawns(game);
-				String playerTurn = getDisplayCharFromPlayer(game, game.getPlayerTurn().getID());
-				sendGameMessageAllPlayers(gameId, "It is " + playerTurn + "'s turn");
+				notifyTurnRotation(game, false, null);
+				ClientAction notification = new ClientAction();
+				notification.setAction("end_turn");
+				sendMessageToUser(player.getID(), notification);
 			}
  		}
 	}
@@ -427,8 +452,8 @@ public class GameController {
 			return;
 		}
 
-		String playerTurn = getDisplayCharFromPlayer(game, game.getPlayerTurn().getID());
-		sendGameMessageAllPlayers(gameId, "It is " + playerTurn + "'s turn");
+		sendMessageToUser(player.getID(), client);
+		notifyTurnRotation(game, false, null);
 	}
 	
 	/**

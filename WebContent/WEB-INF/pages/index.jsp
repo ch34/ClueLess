@@ -207,7 +207,7 @@ $(document).ready(this.selectGame);
      			  <button id="moveRight" onclick='actionMove("Right");'></button>
      			  <button id="moveUp" onclick='actionMove("Up");'></button>
   	 			  <button id="moveDown" onclick='actionMove("Down");'></button>
-				  <button onclick='actionMove("secret");'>Use passage</button>
+				  <button id="movePassage" onclick='actionMove("secret");'>Use passage</button>
   				</span>
 						<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
 						<button id="respond" onclick="showResponseSelection();">Respond</button>

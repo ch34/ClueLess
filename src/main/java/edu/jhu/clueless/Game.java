@@ -82,11 +82,11 @@ public class Game {
 		return currentSuggestion != null;
 	}
 
-	public Suspect getPlayerResponseTurn() {
+	public Player getPlayerResponseTurn() {
 		if (currentSuggestion == null) {
 			return null;
 		}
-		return SUSPECT_ORDER[indexPlayerResponding];
+		return players.get(SUSPECT_ORDER[indexPlayerResponding]);
 	}
 
 	/**

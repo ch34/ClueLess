@@ -9,7 +9,7 @@ function startup(){
 	$("#connect").hide();
 	$("#disconnect").hide();
 	$("#gameInfo").hide();
-	$("#activeGame").hide();
+	$("#toolbar :button").attr("disabled", true);
 }
 
 /**
@@ -243,7 +243,6 @@ function actionRespondSuggest(disproving){
 		clientRespondAction.setCards(null);
 	}
 	sendAction(clientRespondAction);
-	hideAllCardInput();
 }
 
 /**
@@ -475,6 +474,9 @@ responseActionMap.move = function(msg){
 	if (suspect == character) {
 		playerLocation.x = msg.locationX;
 		playerLocation.y = msg.locationY;
+
+		$("#buttonsMove :button").prop("disabled", true);
+		$("#buttonsMove :button").addClass("ui-button-disabled ui-state-disabled");
 	}
 	var newSquare = coordsToSquare[msg.locationX + ',' + msg.locationY];
 	$("#" + suspect).remove();
@@ -516,6 +518,25 @@ responseActionMap.set_hand = function(msg){
 	window.console.log(msg);
 	showPlayersCards(msg.cards);
 	initializeCoords();
+}
+
+responseActionMap.main_turn = function(msg){
+	$("#toolbar :button:not(#respond)").prop("disabled", false);
+	$("#buttonsMove :button").removeClass("ui-button-disabled ui-state-disabled");
+}
+
+responseActionMap.end_turn = function(msg){
+	$("#toolbar :button").prop("disabled", true);
+	$("#buttonsMove :button").addClass("ui-button-disabled ui-state-disabled");
+}
+
+responseActionMap.response_turn = function(msg){
+	$("#respond").prop("disabled", false);
+}
+
+responseActionMap.end_response = function(msg){
+	hideAllCardInput();
+	$("#respond").prop("disabled", true);
 }
 
 function initializeCoords() {

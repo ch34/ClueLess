@@ -1,5 +1,4 @@
-#buttonsMove button {
-}
+
 #conversationDiv textarea{
 	margin: 0 0 5px 0;
 }
@@ -10,6 +9,9 @@
 body{
 	font: 12px verdana, sans-serif; 
 	margin: 0px;
+}
+#activeGame {
+	display: none;
 }
 header{
 	background-color: #679BB7;
