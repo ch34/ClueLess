@@ -396,13 +396,17 @@ public class GameController {
 		String playerChar = getDisplayCharFromPlayer(game, playerId);
 		String message = playerChar + " accused " + String.join(", ", cardToStringList(accusation));
 		sendGameMessageAllPlayers(gameId, message);
+		ClientAction gameOverNotification = new ClientAction();
+		gameOverNotification.setAction("game_over");
 		if (gameWon) {
 			sendGameMessageAllPlayers(client.getGameId(), playerChar + " won the game - Game over");
+			sendGameMessageAllPlayers(client.getGameId(), gameOverNotification);
 			reg.remove(gameId);
 		} else {
 			sendGameMessageAllPlayers(client.getGameId(), playerChar + " has made an incorrect accusation and can no longer win");
 			if (!game.isActive()) {
-				sendGameMessageAllPlayers(client.getGameId(), "No players left in the game - Game over");
+				sendGameMessageAllPlayers(client.getGameId(), "Game over - nobody wins. Case file contents were " + game.getCaseFile().values());
+				sendGameMessageAllPlayers(client.getGameId(), gameOverNotification);
 				reg.remove(gameId);
 			} else {
 				pushLocationUpdateAllPawns(game);

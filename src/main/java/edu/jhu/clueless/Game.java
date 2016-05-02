@@ -138,6 +138,8 @@ public class Game {
 			}
 		}
 
+		logger.info(String.format("Case file initialized with contents=%s", caseFile));
+
 		// Distribute remaining cards to players
 		int indexPlayer = rotatePlayerIndex(-1, true);
 		for (Iterator<Card> iterator = cards.iterator(); iterator.hasNext();) {

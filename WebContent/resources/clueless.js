@@ -567,6 +567,11 @@ responseActionMap.end_response = function(msg){
 	hideAllCardInput();
 	$("#respond").prop("disabled", true);
 }
+responseActionMap.game_over = function(msg){
+	selectGame();
+	$("#startupSection").show();
+	$("#activeGame").hide();
+}
 
 function initializeCoords() {
 	switch (character) {
