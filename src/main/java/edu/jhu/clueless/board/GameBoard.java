@@ -31,13 +31,13 @@ public class GameBoard {
 					switch (xy) {
 						case "0,0": room = new GameSquare(Room.CONSERVATORY, Room.LOUNGE); break;
 						case "0,2": room = new GameSquare(Room.BALLROOM); break;
-						case "0,4": room = new GameSquare(Room.KITCHEN, Room.STUDY); break;
+						case "0,4": room = new GameSquare(Room.KITCHEN, Room.STUDY);
 						case "2,0": room = new GameSquare(Room.LIBRARY); break;
 						case "2,2": room = new GameSquare(Room.BILLIARD_ROOM); break;
 						case "2,4": room = new GameSquare(Room.DINING_ROOM); break;
 						case "4,0": room = new GameSquare(Room.STUDY, Room.KITCHEN); break;
 						case "4,2": room = new GameSquare(Room.HALL); break;
-						case "4,4": room = new GameSquare(Room.LOUNGE, Room.CONSERVATORY);
+						case "4,4": room = new GameSquare(Room.LOUNGE, Room.CONSERVATORY); break;
 					}
 					gameSquares.put(new Point(x, y), room);
 				// If x is even and y is odd OR x is odd and y is even, this is a hallway
@@ -82,12 +82,12 @@ public class GameBoard {
 		for (Suspect suspect : Suspect.values()) {
 			Point home = null;
 			switch (suspect) {
-				case COLONEL_MUSTARD: home = new Point(4, 3); break;
-				case MISS_SCARLET: home = new Point(3, 4); break;
-				case PROFESSOR_PLUM: home = new Point(0, 3); break;
-				case MR_GREEN: home = new Point(1, 0); break;
-				case MRS_WHITE: home = new Point(3, 0); break;
-				case MRS_PEACOCK: home = new Point(0, 1);
+				case COLONEL_MUSTARD: home = new Point(4, 1); break;
+				case MISS_SCARLET: home = new Point(3, 0); break;
+				case PROFESSOR_PLUM: home = new Point(0, 1); break;
+				case MR_GREEN: home = new Point(1, 4); break;
+				case MRS_WHITE: home = new Point(3, 4); break;
+				case MRS_PEACOCK: home = new Point(0, 3);
 			}
 			suspectPawns.put(suspect, home);
 			gameSquares.get(home).setOccupied(true);
