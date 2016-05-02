@@ -159,11 +159,11 @@ $(document).ready(this.selectGame);
 			<div id="activeGame">
 				<table id="boardGrid">
 					<tr>
-						<td id="STUDY">Study</td>
+						<td id="STUDY"></td>
 						<td id="HALL11" class="hallway"></td>
-						<td id="HALL">Hall</td>
+						<td id="HALL"></td>
 						<td id="HALL12" class="hallway"><div class="pawn" id="MISS_SCARLET"></div></td>
-						<td id="LOUNGE">Lounge</td>
+						<td id="LOUNGE"></td>
 					</tr>
 					<tr>
 						<td id="HALL8" class="hallway"><div class="pawn" id="PROFESSOR_PLUM"></div></td>
@@ -173,11 +173,11 @@ $(document).ready(this.selectGame);
 						<td id="HALL10" class="hallway"><div class="pawn" id="COLONEL_MUSTARD"></div></td>
 					</tr>
 					<tr>
-						<td id="LIBRARY">Library</td>
+						<td id="LIBRARY"></td>
 						<td id="HALL6" class="hallway"></td>
-						<td id="BILLIARD_ROOM">Billiard room</td>
+						<td id="BILLIARD_ROOM"></td>
 						<td id="HALL7" class="hallway"></td>
-						<td id="DINING_ROOM">Dining Room</td>
+						<td id="DINING_ROOM"></td>
 					</tr>
 					<tr>
 						<td id="HALL3" class="hallway"><div class="pawn" id="MRS_PEACOCK"></div></td>
@@ -187,11 +187,11 @@ $(document).ready(this.selectGame);
 						<td id="HALL5" class="hallway"></td>
 					</tr>
 					<tr>
-						<td id="CONSERVATORY">Conservatory</td>
+						<td id="CONSERVATORY"></td>
 						<td id="HALL1" class="hallway"><div class="pawn" id="MR_GREEN"></div></td>
-						<td id="BALLROOM">Ballroom</td>
+						<td id="BALLROOM"></td>
 						<td id="HALL2" class="hallway"><div class="pawn" id="MRS_WHITE"></div></td>
-						<td id="KITCHEN">Kitchen</td>
+						<td id="KITCHEN"></td>
 					</tr>
 					</table>
 					<div id="toolbar" class="ui-widget-header ui-corner-all">

@@ -32,7 +32,7 @@ header h1{
 	background-color: #bbd2df;
 }
 .sidebar #chatArea{
-	padding: 10 5 5 10
+	padding: 10px 5px 5px 10px;
 }
 .detective{
 	float: right;
@@ -67,17 +67,29 @@ footer p{
 	text-align: center; 
 	margin: 5px;
 }
-.sidebar textarea{
+#notifications {
 	width: 95%;
 	height: 60%;
 	margin-bottom: 5px;
 	resize: vertical;
+	overflow-y: auto;
+	background-color: white;
 }
 #chatInput input{
 	width: 70%;
 }
+
+input#gameNameInput {
+	min-width: 200px;
+}
+
+#gameName {
+	font-size: 16px;
+}
+
 .title{
 	float:left;
+	display:none
 }
 .subTitle{
 	float:right;
@@ -96,7 +108,7 @@ footer p{
 }
 
 .playerHand {
-	
+
 }
 
 #boardGrid td {
@@ -278,7 +290,7 @@ footer p{
 	padding: 5px 0px 0px 0px;
 }
 .CASE_FILE{
-	background-image: url("images/etc/case_file_small.png");
+	background-image: url("images/etc/case_file_small_cards.png");
     background-repeat: no-repeat;
     background-size: contain;
     width: 50%;
@@ -295,10 +307,27 @@ footer p{
     height: 20%;
 }
 
+.sidebar textarea{
+
+}
+
 #notifications .error {
 	color: red;
 }
 
 #notifications .update {
 	color: gray;
+}
+
+#boardGrid td {
+	height: 100px;
+	width: 100px;
+}
+
+#boardGrid td.empty {
+	background-color: inherit;
+}
+
+#boardGrid td.hallway {
+	background-color: rosybrown;
 }
