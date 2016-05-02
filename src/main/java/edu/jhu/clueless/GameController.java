@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import edu.jhu.clueless.board.GameBoard;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -228,7 +229,11 @@ public class GameController {
 			return;
 		}
 
-		sendGameMessageAllPlayers(gameId, "Game has started");
+		List<String> playersString = new ArrayList<>();
+		for (Player player : game.getPlayers()) {
+			playersString.add(player.getSuspect().toString().toLowerCase());
+		}
+		sendGameMessageAllPlayers(gameId, "Game has started with " + String.join(", ", playersString));
 		String playerTurn = getDisplayCharFromPlayer(game, game.getPlayerTurn().getID());
 		sendGameMessageAllPlayers(gameId, "It is " + playerTurn + "'s turn");
 
@@ -243,6 +248,8 @@ public class GameController {
 
 			sendMessageToUser(thisPlayerId, update);
 		}
+
+		pushLocationUpdateAllPawns(game);
 	}
 	
 	/**
@@ -269,6 +276,8 @@ public class GameController {
 			sendMessageToUser(playerId, e.getMessage());
 			return;
 		}
+
+		pushLocationUpdateAllPawns(game);
 
 		String message = getDisplayCharFromPlayer(game, playerId) + " suggested " + String.join(", ", cardToStringList(suggestion));
 		sendGameMessageAllPlayers(gameId, message);
@@ -361,19 +370,38 @@ public class GameController {
 			return;
 		}
 
-		String message = getDisplayCharFromPlayer(game, playerId) + " accused " + String.join(",", cardToStringList(accusation));
+		String playerChar = getDisplayCharFromPlayer(game, playerId);
+		String message = playerChar + " accused " + String.join(", ", cardToStringList(accusation));
 		sendGameMessageAllPlayers(gameId, message);
 		if (gameWon) {
-			sendGameMessageAllPlayers(client.getGameId(), client);
+			sendGameMessageAllPlayers(client.getGameId(), playerChar + " won the game - Game over");
 			reg.remove(gameId);
 		} else {
-			String playerChar = getDisplayCharFromPlayer(game, playerId);
 			sendGameMessageAllPlayers(client.getGameId(), playerChar + " has made an incorrect accusation and can no longer win");
 			if (!game.isActive()) {
 				sendGameMessageAllPlayers(client.getGameId(), "No players left in the game - Game over");
 				reg.remove(gameId);
+			} else {
+				pushLocationUpdateAllPawns(game);
+				String playerTurn = getDisplayCharFromPlayer(game, game.getPlayerTurn().getID());
+				sendGameMessageAllPlayers(gameId, "It is " + playerTurn + "'s turn");
 			}
  		}
+	}
+
+	private void pushLocationUpdateAllPawns(Game game) {
+		GameBoard board = game.getGameBoard();
+		String gameId = game.getId();
+
+		for (Constants.Suspect suspect : Constants.Suspect.values()) {
+			ClientAction moveUpdate = new ClientAction();
+			Point location = board.getLocation(suspect);
+			moveUpdate.setSuspect(suspect.toString());
+			moveUpdate.setAction("move");
+			moveUpdate.setLocationX(location.x);
+			moveUpdate.setLocationY(location.y);
+			sendGameMessageAllPlayers(gameId, moveUpdate);
+		}
 	}
 
 	/**

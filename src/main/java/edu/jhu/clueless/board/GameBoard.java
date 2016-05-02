@@ -1,6 +1,7 @@
 package edu.jhu.clueless.board;
 
 import edu.jhu.clueless.CluelessException;
+import edu.jhu.clueless.Constants;
 import edu.jhu.clueless.Constants.Room;
 import edu.jhu.clueless.Constants.Suspect;
 
@@ -8,7 +9,20 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static edu.jhu.clueless.Constants.Suspect.*;
+
 public class GameBoard {
+
+	public static final Map<Suspect, Point> SUSPECT_TO_HOME_ROOM;
+	static {
+		SUSPECT_TO_HOME_ROOM = new HashMap<>();
+		SUSPECT_TO_HOME_ROOM.put(MISS_SCARLET, new Point(4, 4));
+		SUSPECT_TO_HOME_ROOM.put(COLONEL_MUSTARD, new Point(4, 2));
+		SUSPECT_TO_HOME_ROOM.put(PROFESSOR_PLUM, new Point(0, 4));
+		SUSPECT_TO_HOME_ROOM.put(MR_GREEN, new Point(2, 0));
+		SUSPECT_TO_HOME_ROOM.put(MRS_PEACOCK, new Point(0, 0));
+		SUSPECT_TO_HOME_ROOM.put(MRS_WHITE, new Point(4, 0));
+	}
 
 	protected Map<Suspect, Point> suspectPawns;
 	protected Map<Point, GameSquare> gameSquares;
@@ -31,7 +45,7 @@ public class GameBoard {
 					switch (xy) {
 						case "0,0": room = new GameSquare(Room.CONSERVATORY, Room.LOUNGE); break;
 						case "2,0": room = new GameSquare(Room.BALLROOM); break;
-						case "4,0": room = new GameSquare(Room.KITCHEN, Room.STUDY);
+						case "4,0": room = new GameSquare(Room.KITCHEN, Room.STUDY); break;
 						case "0,2": room = new GameSquare(Room.LIBRARY); break;
 						case "2,2": room = new GameSquare(Room.BILLIARD_ROOM); break;
 						case "4,2": room = new GameSquare(Room.DINING_ROOM); break;

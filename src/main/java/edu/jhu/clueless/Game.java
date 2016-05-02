@@ -16,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static edu.jhu.clueless.board.GameBoard.SUSPECT_TO_HOME_ROOM;
+
 public class Game {
 
 	private static Suspect[] SUSPECT_ORDER = { Suspect.MISS_SCARLET, Suspect.COLONEL_MUSTARD, Suspect.MRS_WHITE,
@@ -72,6 +74,10 @@ public class Game {
 		allowedActions = new HashMap<>();
 	}
 
+	public GameBoard getGameBoard() {
+		return board;
+	}
+
 	public boolean isSusggestionInProgress() {
 		return currentSuggestion != null;
 	}
@@ -95,6 +101,17 @@ public class Game {
 			distributeCards();
 			indexPlayerTurn = rotatePlayerIndex(indexPlayerTurn, true);
 			initializeAllowedActions();
+
+			// Move inactive pawns to rooms so they don't block hallways
+			try {
+				for (Suspect suspect : SUSPECT_ORDER) {
+					if (!this.players.containsKey(suspect)) {
+						board.move(suspect, GameBoard.SUSPECT_TO_HOME_ROOM.get(suspect), true);
+					}
+				}
+			} catch (CluelessException e) {
+				throw new RuntimeException();
+			}
 		}
 	}
 
@@ -391,11 +408,11 @@ public class Game {
 			getTypeFromProposal(accusation, EntityType.ROOM) == caseFile.get(EntityType.ROOM)) {
 			gameWinner = player;
 		} else {
-			// If player is in a hallway, move them into the billiard room so they won't block anyone
+			// If player is in a hallway, move them into a room so they won't block anyone
 			Suspect suspect = player.getSuspect();
 			Point playerLocation = board.getLocation(player.getSuspect());
 			if (board.getRoom(playerLocation) == null) {
-				board.move(suspect, board.getLocation(Room.BILLIARD_ROOM), true);
+				board.move(suspect, GameBoard.SUSPECT_TO_HOME_ROOM.get(suspect), true);
 			}
 		}
 
@@ -463,7 +480,7 @@ public class Game {
 		return true;
 	}
 
-	private Card getTypeFromProposal(Collection<Card> cards, EntityType type) {
+	public static Card getTypeFromProposal(Collection<Card> cards, EntityType type) {
 		for (Card card : cards) {
 			if (card.getType() == type) {
 				return card;

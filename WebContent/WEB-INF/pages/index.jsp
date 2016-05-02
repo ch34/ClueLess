@@ -69,6 +69,13 @@ var coordsToSquare = {
 	'4,4': 'LOUNGE'
 };
 
+var secretPassageMap = {
+	STUDY: {x: 4, y: 0},
+	KITCHEN: {x: 0, y: 4},
+	CONSERVATORY: {x: 4, y: 4},
+	LOUNGE: {x: 0, y: 0}
+}
+
 //This class mimics the JAVA class
 //function names must match those of the Java class
 //in order for Jackson to convert successfully
@@ -200,6 +207,7 @@ $(document).ready(this.selectGame);
      			  <button id="moveRight" onclick='actionMove("Right");'></button>
      			  <button id="moveUp" onclick='actionMove("Up");'></button>
   	 			  <button id="moveDown" onclick='actionMove("Down");'></button>
+				  <button onclick='actionMove("secret");'>Use passage</button>
   				</span>
 						<button id="suggest" onclick="showSuggestSelection();">Suggest</button>
 						<button id="respond" onclick="showResponseSelection();">Respond</button>
@@ -255,10 +263,6 @@ $(document).ready(this.selectGame);
 				</div>
 				<div class="playerHand" id="playerHand"></div>
 			</div>
-		</div>
-		<div class="detective">
-			<div class="rightSidebar-spacer"></div>
-			<div class="CASE_FILE"></div>
 		</div>
 	</div>
 	<footer>

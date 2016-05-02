@@ -119,11 +119,19 @@ function sendAction(action){
 function actionMove(direction) {
 	var x = playerLocation.x;
 	var y = playerLocation.y;
+	var currentRoom = coordsToSquare[x + ',' + y];
 	switch (direction) {
 		case 'Left': x = x - 1; break;
 		case 'Right': x = x + 1; break;
 		case 'Up': y = y + 1; break;
 		case 'Down': y = y - 1; break;
+		case 'secret': if (secretPassageMap[currentRoom]) {
+			x = secretPassageMap[currentRoom].x;
+			y = secretPassageMap[currentRoom].y;
+		} else {
+			updateChatArea('Current room does not contain a secret passage', 'error');
+			return;
+		}
 	}
 	clientMoveAction.locationX = x;
 	clientMoveAction.locationY = y;
@@ -131,6 +139,12 @@ function actionMove(direction) {
 }
 
 function actionSuggest(){
+	var inRoom = isPlayerInRoom(playerLocation.x, playerLocation.y);
+	if(!inRoom){
+		updateChatArea("Sorry, you must be in a room", 'error');
+		return;
+	}
+
 	var cards = [];
 	cards.push( selectSuspect() );
 	cards.push( selectWeapon() );
@@ -396,6 +410,11 @@ function hideAllCardInput(){
 	// only the options they need will be shown
 	$("#proposalInput").hide();
 	$("#responseInput").hide();
+
+	$('#suspects').prop('selectedIndex', 0);
+	$('#rooms').prop('selectedIndex', 0);
+	$('#weapons').prop('selectedIndex', 0);
+	$('#responseList').prop('selectedIndex', 0);
 }
 
 /**
